@@ -1,0 +1,34 @@
+---
+title: "Tour of the dashboard"
+description: "A five-minute tour of the Optifin dashboard: date range, comparison, key performance, your metrics, briefing and trend."
+sidebar:
+  order: 5
+---
+
+import { Image } from "astro:assets";
+import dashboardOverview from "../../../../assets/screens/dashboard-overview.png";
+
+
+The dashboard answers four questions, top to bottom.
+
+<Image src={dashboardOverview} alt="The Optifin dashboard with key performance cards" widths={[800, 1200, 1600]} sizes="(max-width: 900px) 100vw, 46rem" />
+
+<p class="sample-note">Shown with sample data.</p>
+
+
+1. **Period and view.** Choose the date range, the comparison (previous period, previous month, previous year or custom) and which saved view to show.
+2. **Store setup & profit readiness.** Appears while inputs are missing and links to the fix.
+3. **Key performance.** The first six metrics of your view: by default net profit, revenue, net margin, orders, average order value and contribution profit.
+4. **Your metrics.** Every other metric in your view, in the same card style.
+5. **Executive briefing.** What changed and what needs attention.
+6. **Performance trend.** Up to four metrics over time.
+7. **Costs and store activity.** Where the money went, plus order and customer summaries.
+
+Each card shows the value, the change against the comparison period (or a short note when it is paused), a sparkline, and a coverage note at the bottom when an input is incomplete.
+
+## Related
+
+- [Customize the dashboard](/docs/dashboard/customize/)
+- [Executive briefing](/docs/dashboard/executive-briefing/)
+
+Still stuck? Email [support@optifin.app](mailto:support@optifin.app).

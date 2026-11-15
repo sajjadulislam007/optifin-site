@@ -1,0 +1,108 @@
+---
+// Shared desktop mega-menu shell: trigger button + floating panel. Opens on
+// click (and on hover for fine pointers); closes on Escape, outside click or
+// when focus leaves. Menu content comes from the slot. Shared item styles
+// (.mm-*) are global so every menu looks the same.
+interface Props { id: string; label: string; current?: boolean; width?: number }
+const { id, label, current = false, width = 1040 } = Astro.props;
+---
+<div class="mm" data-mm>
+  <button type="button" class="mm-trigger" aria-expanded="false" aria-controls={id} data-current={current ? "true" : undefined}>
+    {label} <svg viewBox="0 0 12 12" width="12" height="12" aria-hidden="true"><path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" /></svg>
+  </button>
+  <div id={id} class="mm-panel" style={`--mm-w:${width}px`} hidden>
+    <slot />
+  </div>
+</div>
+
+<style>
+  .mm { position: static; }
+  .mm-trigger {
+    display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 999px; border: 0;
+    background: transparent; color: inherit; font: inherit; font-weight: 500; font-size: 15.5px; cursor: pointer;
+    opacity: 0.82; transition: opacity 0.2s, background 0.2s;
+  }
+  .mm-trigger svg { transition: transform 0.2s; }
+  .mm-trigger:hover, .mm-trigger[aria-expanded="true"], .mm-trigger[data-current] { opacity: 1; background: rgb(127 127 127 / 0.12); }
+  .mm-trigger[aria-expanded="true"] svg { transform: rotate(180deg); }
+  .mm-panel {
+    position: absolute; left: 50%; top: calc(100% - 6px); transform: translateX(-50%);
+    width: min(100% - var(--gutter) * 2, var(--mm-w));
+    background: #fff; color: var(--ink); border: 1px solid var(--line); border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg); padding: 28px; animation: mm-in 0.18s ease-out;
+  }
+  @keyframes mm-in { from { opacity: 0; transform: translate(-50%, -6px); } }
+  @media (prefers-reduced-motion: reduce) { .mm-panel { animation: none; } }
+
+  /* Shared content styles for every menu. */
+  :global(.mm-cols) { display: grid; gap: 28px; }
+  :global(.mm-col) { display: grid; align-content: start; gap: 8px; min-width: 0; }
+  :global(.mm-col + .mm-col) { border-left: 1px solid var(--line); padding-left: 28px; }
+  :global(.mm-title) {
+    margin: 0 0 4px; font-family: var(--font-display); font-size: 12.5px; font-weight: 600; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--ink-muted);
+  }
+  :global(.mm-list) { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+  :global(.mm-item) {
+    display: flex; gap: 12px; align-items: flex-start; padding: 10px; margin-inline: -10px; border-radius: 12px;
+    text-decoration: none; color: var(--ink); transition: background 0.15s;
+  }
+  :global(.mm-item:hover) { background: var(--surface-2); }
+  :global(.mm-item strong) { display: block; font-size: 15px; font-weight: 600; line-height: 1.3; }
+  :global(.mm-item small) { display: block; font-size: 13.5px; color: var(--ink-muted); line-height: 1.4; margin-top: 2px; }
+  :global(.mm-ico) { flex: none; width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; background: #eaf2ff; color: var(--brand-600); }
+  :global(.mm-link) { display: flex; align-items: center; gap: 8px; padding: 6px 0; font-size: 15px; text-decoration: none; color: var(--ink-soft); transition: color 0.15s; }
+  :global(.mm-link:hover) { color: var(--brand-700); }
+  :global(.mm-more) { display: inline-flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 14.5px; font-weight: 600; color: var(--brand-700); text-decoration: none; }
+  :global(.mm-more:hover) { gap: 9px; }
+  :global(.mm-tag) { font-size: 11.5px; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: rgb(59 130 246 / 0.12); color: var(--brand-700); }
+  :global(.mm-feature) {
+    display: grid; gap: 10px; align-content: start; padding: 22px; border-radius: 18px; text-decoration: none;
+    background: var(--navy-900); color: #fff; position: relative; overflow: hidden;
+  }
+  :global(.mm-feature::before) {
+    content: ""; position: absolute; width: 320px; height: 320px; right: -140px; top: -160px; border-radius: 50%;
+    background: radial-gradient(circle, rgb(37 99 235 / 0.5), transparent 62%);
+  }
+  :global(.mm-feature > *) { position: relative; }
+  :global(.mm-feature .mm-kicker) { font-size: 12px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--brand-300); }
+  :global(.mm-feature strong) { font-family: var(--font-display); font-size: 19px; line-height: 1.25; }
+  :global(.mm-feature p) { font-size: 14px; color: #aab6c8; margin: 0; }
+  :global(.mm-feature .mm-go) { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; font-size: 14.5px; color: var(--brand-300); }
+</style>
+
+<script>
+  document.querySelectorAll<HTMLElement>("[data-mm]").forEach((root) => {
+    const button = root.querySelector<HTMLButtonElement>(".mm-trigger")!;
+    const panel = root.querySelector<HTMLElement>(".mm-panel")!;
+    let timer: number | undefined;
+    let hoverOpenedAt = 0;
+    const isOpen = () => button.getAttribute("aria-expanded") === "true";
+    const set = (open: boolean) => {
+      if (open) {
+        // Only one menu open at a time.
+        document.querySelectorAll<HTMLElement>("[data-mm]").forEach((other) => {
+          if (other === root) return;
+          other.querySelector(".mm-trigger")?.setAttribute("aria-expanded", "false");
+          const p = other.querySelector<HTMLElement>(".mm-panel");
+          if (p) p.hidden = true;
+        });
+      }
+      button.setAttribute("aria-expanded", String(open));
+      panel.hidden = !open;
+    };
+    // A click right after hover opened the panel should not close it again.
+    button.addEventListener("click", () => set(Date.now() - hoverOpenedAt < 600 ? true : !isOpen()));
+    const hover = window.matchMedia("(hover: hover) and (pointer: fine)");
+    root.addEventListener("pointerenter", () => {
+      if (!hover.matches) return;
+      clearTimeout(timer);
+      if (!isOpen()) hoverOpenedAt = Date.now();
+      set(true);
+    });
+    root.addEventListener("pointerleave", () => { if (hover.matches) timer = window.setTimeout(() => set(false), 180); });
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape" && isOpen()) { set(false); button.focus(); } });
+    document.addEventListener("click", (e) => { if (isOpen() && !root.contains(e.target as Node)) set(false); });
+    root.addEventListener("focusout", (e) => { if (!root.contains(e.relatedTarget as Node)) set(false); });
+  });
+</script>

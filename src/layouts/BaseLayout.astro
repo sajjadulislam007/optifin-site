@@ -1,0 +1,86 @@
+---
+import "../styles/global.css";
+import Header from "../components/Header.astro";
+import Footer from "../components/Footer.astro";
+import { SITE } from "../data/site";
+
+interface Props {
+  title: string;
+  description: string;
+  /** Extra JSON-LD objects for this page. */
+  schema?: Record<string, unknown>[];
+  /** Breadcrumb trail, excluding Home. */
+  breadcrumbs?: { name: string; href: string }[];
+  ogImage?: string;
+  noindex?: boolean;
+  headerTone?: "dark" | "light";
+}
+const { title, description, schema = [], breadcrumbs = [], ogImage = "/og.png", noindex = false, headerTone = "light" } = Astro.props;
+const canonical = new URL(Astro.url.pathname, Astro.site).toString();
+const ogUrl = new URL(ogImage, Astro.site).toString();
+
+const sitewide = [
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: SITE.name,
+    url: SITE.url,
+    logo: `${SITE.url}/favicon.svg`,
+    email: SITE.supportEmail,
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: SITE.name,
+    url: SITE.url,
+  },
+];
+const crumbs = breadcrumbs.length
+  ? [{
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [{ name: "Home", href: "/" }, ...breadcrumbs].map((c, i) => ({
+        "@type": "ListItem", position: i + 1, name: c.name, item: new URL(c.href, Astro.site).toString(),
+      })),
+    }]
+  : [];
+const jsonLd = [...sitewide, ...crumbs, ...schema];
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    {noindex && <meta name="robots" content="noindex" />}
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+    <meta name="theme-color" content="#071529" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={SITE.name} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogUrl} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogUrl} />
+    <script is:inline>document.documentElement.classList.add("js");</script>
+    {jsonLd.map((item) => <script type="application/ld+json" set:html={JSON.stringify(item)} />)}
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <Header tone={headerTone} />
+    <main id="main">
+      <slot />
+    </main>
+    <Footer />
+    <script>
+      import { initReveals } from "../scripts/motion/reveal";
+      initReveals();
+    </script>
+  </body>
+</html>

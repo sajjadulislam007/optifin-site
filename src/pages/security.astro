@@ -1,0 +1,39 @@
+---
+import ProseLayout from "../layouts/ProseLayout.astro";
+---
+<ProseLayout
+  title="Security and Data | Optifin"
+  heading="Security and data"
+  eyebrow="Trust"
+  description="How Optifin protects your Shopify data: read-only access, tenant isolation, minimal customer data, encryption and deletion on uninstall."
+  lead="Optifin needs your store's numbers, not your customers' identities. Here is exactly what we read and how it is protected."
+  path="/security/"
+  updated="November 14, 2026"
+>
+  <h2>Read-only access</h2>
+  <p>Optifin asks Shopify only for read permissions: orders, products, inventory, locations, customers, fulfillments and returns. It cannot change your products, orders or settings.</p>
+
+  <h2>Minimal customer data</h2>
+  <ul>
+    <li>Optifin does not intentionally store customer names, email addresses, phone numbers or postal addresses.</li>
+    <li>Visitor, session, cart, checkout and click identifiers used for attribution are stored only as keyed one-way hashes.</li>
+    <li>Exports and activity logs are sanitized and exclude credentials.</li>
+  </ul>
+
+  <h2>Separation and protection</h2>
+  <ul>
+    <li>Every store's data is scoped to that store; one store can never read another's.</li>
+    <li>Access tokens for connected services are encrypted at rest and never sent to the browser.</li>
+    <li>The app runs inside your Shopify admin using Shopify's session tokens; there is no separate password to leak.</li>
+  </ul>
+
+  <h2>Uninstall and deletion</h2>
+  <ul>
+    <li>Uninstalling removes Optifin's access immediately: sessions are deleted and background work is cancelled.</li>
+    <li>48 hours later, when Shopify sends its shop deletion request, Optifin deletes the store's data.</li>
+    <li>Shopify's customer redaction and data-request webhooks are handled.</li>
+  </ul>
+
+  <h2>Report a concern</h2>
+  <p>Email <a href="mailto:support@optifin.app">support@optifin.app</a> with "Security" in the subject. See also the <a href="/privacy/">privacy policy</a>.</p>
+</ProseLayout>

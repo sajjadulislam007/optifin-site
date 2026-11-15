@@ -1,0 +1,116 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import PageHero from "../../components/PageHero.astro";
+import Icon from "../../components/Icon.astro";
+import { INTEGRATIONS, STATUS_LABEL, integrationUrl, type Integration } from "../../data/integrations";
+import { SITE, installUrl } from "../../data/site";
+
+export function getStaticPaths() {
+  return INTEGRATIONS.map((integration) => ({ params: { slug: integration.slug }, props: { integration } }));
+}
+const { integration: i } = Astro.props as { integration: Integration };
+const live = i.status === "live";
+const others = INTEGRATIONS.filter((o) => o.slug !== i.slug);
+const schema = [{
+  "@context": "https://schema.org", "@type": "FAQPage",
+  mainEntity: i.faq.map(([q, a]) => ({ "@type": "Question", name: q, acceptedAnswer: { "@type": "Answer", text: a } })),
+}];
+const notify = `mailto:${SITE.supportEmail}?subject=${encodeURIComponent(`Tell me when ${i.name} is available`)}`;
+---
+<BaseLayout
+  title={i.title}
+  description={i.description}
+  breadcrumbs={[{ name: "Integrations", href: "/integrations/" }, { name: i.name, href: integrationUrl(i.slug) }]}
+  schema={schema}
+  headerTone="dark"
+>
+  <PageHero eyebrow={`${i.name} integration`} title={i.headline} lead={i.lead}>
+    <div class="hero-meta" data-reveal>
+      <span class:list={["badge", live ? "badge--live" : "badge--soon"]}>{STATUS_LABEL[i.status]}</span>
+      {live ? (
+        <a class="btn btn--primary" href={installUrl(`integration-${i.slug}`)}>Install on Shopify</a>
+      ) : (
+        <a class="btn btn--light" href={notify}>Tell me when it is ready</a>
+      )}
+    </div>
+    {!live && (
+      <p class="status-note" data-reveal>
+        This connection is built and opens after launch, once {i.name}'s review is complete. It is not available yet.
+      </p>
+    )}
+  </PageHero>
+
+  <section class="section">
+    <div class="container cols">
+      <div class="card block" data-reveal>
+        <h2 class="h3">What Optifin reads</h2>
+        <ul class="list yes">{i.reads.map((r) => <li><Icon name="check" size={16} /> {r}</li>)}</ul>
+        <p class="perm"><span>Permission requested</span><code>{i.permission}</code></p>
+      </div>
+      <div class="card block" data-reveal>
+        <h2 class="h3">What it does not read</h2>
+        <ul class="list no">{i.notRead.map((r) => <li><span aria-hidden="true">—</span> {r}</li>)}</ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--soft">
+    <div class="container">
+      <h2 class="h2" data-reveal>Set up in three steps</h2>
+      <ol class="steps" data-reveal-group>
+        {i.setup.map((s, n) => (
+          <li class="card"><span class="n">{n + 1}</span><h3>{s.step}</h3><p>{s.detail}</p></li>
+        ))}
+      </ol>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container cols">
+      <div data-reveal>
+        <h2 class="h3">What it unlocks</h2>
+        <ul class="list yes">{i.unlocks.map((u) => <li><Icon name="check" size={16} /> {u}</li>)}</ul>
+      </div>
+      <div data-reveal>
+        <h2 class="h3">Sync and currency</h2>
+        <ul class="list plain">{i.sync.map((s) => <li>{s}</li>)}</ul>
+        <h2 class="h3 gap">Limitations</h2>
+        <ul class="list plain">{i.limits.map((s) => <li>{s}</li>)}</ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--soft">
+    <div class="container prose">
+      <h2>Questions</h2>
+      {i.faq.map(([q, a]) => (<><h3>{q}</h3><p>{a}</p></>))}
+      <p>Other integrations: {others.map((o, n) => (<>{n > 0 && ", "}<a href={integrationUrl(o.slug)}>{o.name}</a></>))}. <a href="/integrations/">All integrations</a>.</p>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .hero-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; }
+  .badge--live { background: rgb(15 159 110 / 0.18); color: #6ee7b7; }
+  .hero-meta .badge--soon { background: rgb(45 212 191 / 0.14); color: var(--brand-300); }
+  .status-note { color: #b8c4d6; font-size: 15px; max-width: 62ch; }
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start; }
+  .block { padding: 32px; display: grid; gap: 18px; }
+  .list { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; }
+  .list li { display: flex; gap: 10px; line-height: 1.5; }
+  .list.yes :global(svg) { color: var(--profit); flex: none; margin-top: 5px; }
+  .list.no span { color: var(--ink-muted); }
+  .list.plain li { display: list-item; margin-left: 1.1em; list-style: disc; color: var(--ink-soft); }
+  .list.plain { margin-top: 14px; }
+  .h3.gap { margin-top: 36px; }
+  .cols > div > .list { margin-top: 18px; }
+  .perm { display: grid; gap: 6px; font-size: 14px; border-top: 1px solid var(--line); padding-top: 16px; }
+  .perm span { color: var(--ink-muted); font-weight: 600; }
+  .perm code { background: var(--surface-3); padding: 8px 10px; border-radius: 8px; font-size: 13px; word-break: break-word; }
+  .steps { list-style: none; padding: 0; margin: 32px 0 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .steps li { padding: 28px; display: grid; gap: 10px; align-content: start; }
+  .steps .n { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: var(--brand-gradient); color: #fff; font-weight: 700; }
+  .steps h3 { font-size: 20px; }
+  .steps p { color: var(--ink-soft); }
+  @media (max-width: 900px) { .cols, .steps { grid-template-columns: 1fr; } }
+</style>

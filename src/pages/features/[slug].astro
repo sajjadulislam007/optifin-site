@@ -1,0 +1,113 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import PageHero from "../../components/PageHero.astro";
+import Screen from "../../components/Screen.astro";
+import Icon from "../../components/Icon.astro";
+import { FEATURES, installUrl, type Feature } from "../../data/site";
+
+export function getStaticPaths() {
+  return FEATURES.map((feature) => ({ params: { slug: feature.slug }, props: { feature } }));
+}
+const { feature } = Astro.props as { feature: Feature };
+const others = FEATURES.filter((f) => f.slug !== feature.slug).slice(0, 3);
+const extraShots: Record<string, { name: string; alt: string }[]> = {
+  "profit-dashboard": [
+    { name: "dashboard-briefing", alt: "Executive briefing" },
+    { name: "dashboard-trend", alt: "Performance trend chart" },
+  ],
+  costs: [
+    { name: "costs-products", alt: "Product costs with coverage" },
+    { name: "costs-custom", alt: "Custom costs" },
+  ],
+  "orders-and-products": [
+    { name: "products", alt: "Product profitability" },
+  ],
+  customers: [{ name: "customer-segments", alt: "Customer segments" }],
+  reports: [{ name: "custom-reports", alt: "Custom reports" }],
+  "action-center": [],
+  simulator: [{ name: "profit-plan", alt: "Profit plan" }],
+  marketing: [
+    { name: "marketing-channels", alt: "Ad spend against Shopify-attributed revenue by channel" },
+  ],
+  "alerts-and-delivery": [],
+};
+const extras = extraShots[feature.slug] || [];
+---
+<BaseLayout
+  title={feature.seoTitle}
+  description={feature.seoDescription}
+  breadcrumbs={[{ name: "Features", href: "/features/" }, { name: feature.name, href: `/features/${feature.slug}/` }]}
+  headerTone="dark"
+>
+  <PageHero eyebrow={feature.eyebrow} title={feature.title} lead={feature.summary}>
+    <div class="actions">
+      <a class="btn btn--primary" href={installUrl(`feature-${feature.slug}`)}>Install on Shopify</a>
+      <a class="btn btn--ghost" href={feature.docs}>Read the guide</a>
+    </div>
+  </PageHero>
+
+  <section class="hero-shot">
+    <div class="container" data-reveal>
+      <Screen name={feature.screen} alt={`Optifin ${feature.name}`} eager note />
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <ul class="points" data-reveal-group>
+        {feature.points.map((p) => (
+          <li class="card">
+            <Icon name="check" size={22} />
+            <h2 class="h3">{p.title}</h2>
+            <p>{p.body}</p>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  {extras.length > 0 && (
+    <section class="section section--soft">
+      <div class="container shots">
+        {extras.map((s) => <div data-reveal><Screen name={s.name} alt={`Optifin ${s.alt}`} sizes="(max-width: 900px) 100vw, 600px" /></div>)}
+      </div>
+    </section>
+  )}
+
+  <section class="section">
+    <div class="container">
+      <h2 class="h2 others-title" data-reveal>Explore more</h2>
+      <div class="others" data-reveal-group>
+        {others.map((f) => (
+          <a class="card other" href={`/features/${f.slug}/`}>
+            <span class="eyebrow">{f.eyebrow}</span>
+            <h3 class="h3">{f.name}</h3>
+            <p>{f.summary}</p>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 6px; }
+  .actions .btn--ghost { color: #fff; }
+  .hero-shot { background: linear-gradient(var(--navy-900) 0 45%, var(--surface) 45%); padding-bottom: 40px; }
+  .hero-shot .container { max-width: 1100px; }
+  .hero-shot :global(.screen) { max-height: 720px; box-shadow: var(--shadow-lg), var(--shadow-glow); }
+  .hero-shot :global(.screen img) { object-fit: cover; object-position: top; max-height: 686px; }
+  .points { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .points li { padding: 28px; display: grid; gap: 12px; align-content: start; }
+  .points :global(svg) { color: var(--brand-600); }
+  .points p { color: var(--ink-soft); }
+  .shots { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; align-items: start; }
+  .shots :global(.screen) { max-height: 460px; }
+  .shots :global(.screen img) { object-fit: cover; object-position: top; max-height: 426px; }
+  .others-title { margin-bottom: 36px; }
+  .others { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .other { padding: 26px; display: grid; gap: 10px; text-decoration: none; transition: transform 0.3s, box-shadow 0.3s; }
+  .other:hover { transform: translateY(-4px); box-shadow: var(--shadow); }
+  .other p { color: var(--ink-soft); font-size: 15.5px; }
+  @media (max-width: 900px) { .points, .others { grid-template-columns: 1fr; } .shots { grid-template-columns: 1fr; } }
+</style>

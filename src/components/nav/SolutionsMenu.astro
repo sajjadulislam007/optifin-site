@@ -1,0 +1,47 @@
+---
+// Solutions mega menu: the problems Optifin solves, in merchants' words, and
+// who it is for. Every link goes to an existing feature page or tool.
+import MegaMenu from "./MegaMenu.astro";
+import Icon from "../Icon.astro";
+import { SOLUTION_PROBLEMS, SOLUTION_ROLES } from "../../data/nav";
+interface Props { variant: "desktop" | "mobile" }
+const { variant } = Astro.props;
+---
+{variant === "desktop" ? (
+  <MegaMenu id="mm-solutions" label="Solutions" width={1080}>
+    <div class="mm-cols solutions">
+      <section class="mm-col" aria-labelledby="mm-problems">
+        <h2 id="mm-problems" class="mm-title">Problems we solve</h2>
+        <ul class="mm-list two">
+          {SOLUTION_PROBLEMS.map((p) => (
+            <li><a class="mm-item" href={p.href}><span class="mm-ico"><Icon name={p.icon} size={18} /></span><span><strong>{p.label}</strong><small>{p.blurb}</small></span></a></li>
+          ))}
+        </ul>
+      </section>
+      <section class="mm-col" aria-labelledby="mm-roles">
+        <h2 id="mm-roles" class="mm-title">Built for</h2>
+        <ul class="mm-list">{SOLUTION_ROLES.map((r) => <li><a class="mm-link" href={r.href}>{r.label}</a></li>)}</ul>
+        <a class="mm-feature calc" href="/tools/">
+          <span class="mm-kicker">Free tools</span>
+          <strong>Profit calculators</strong>
+          <p>Margin, break-even ROAS, POAS, discounts and LTV:CAC. No sign-up.</p>
+          <span class="mm-go">Open the calculators <Icon name="arrow" size={14} /></span>
+        </a>
+      </section>
+    </div>
+  </MegaMenu>
+) : (
+  <details class="m-menu">
+    <summary>Solutions <svg viewBox="0 0 12 12" width="14" height="14" aria-hidden="true"><path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" /></svg></summary>
+    <div class="m-groups">
+      <div><p>Problems we solve</p>{SOLUTION_PROBLEMS.map((p) => <a href={p.href}>{p.label.replace(/[“”]/g, "")}</a>)}</div>
+      <div><p>Built for</p>{SOLUTION_ROLES.map((r) => <a href={r.href}>{r.label}</a>)}</div>
+    </div>
+  </details>
+)}
+
+<style>
+  .solutions { grid-template-columns: 1.9fr 1fr; }
+  .two { grid-template-columns: 1fr 1fr; column-gap: 18px; }
+  .calc { margin-top: 12px; }
+</style>

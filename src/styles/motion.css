@@ -1,0 +1,7 @@
+/* Elements are hidden for entrance animations only when JavaScript runs and
+   the visitor has not asked for reduced motion. Without JS or with reduced
+   motion everything is visible immediately. */
+@media (prefers-reduced-motion: no-preference) {
+  html.js [data-reveal],
+  html.js [data-reveal-group] > * { visibility: hidden; }
+}

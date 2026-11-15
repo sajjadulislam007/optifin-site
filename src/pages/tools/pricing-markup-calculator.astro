@@ -1,0 +1,65 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import PageHero from "../../components/PageHero.astro";
+import CalcLayout from "../../components/CalcLayout.astro";
+import CalcField from "../../components/CalcField.astro";
+import { installUrl } from "../../data/site";
+import { toolSchema, toolUrl } from "../../data/tools";
+const url = toolUrl("pricing-markup-calculator");
+const faq: [string, string][] = [
+  ["What is the difference between markup and margin?", "Markup is profit as a share of cost; margin is profit as a share of price. A product that costs $10 and sells for $20 has a 100% markup but a 50% margin."],
+  ["How do I price a product for a target margin?", "Divide your total cost per unit by one minus the target margin. For a 60% margin on a $10 cost: $10 ÷ 0.40 = $25."],
+  ["Should the cost include shipping and fees?", "For pricing decisions, yes. Include every cost that comes with each unit, such as packaging, shipping you pay for and payment fees, or the margin you plan for will be higher than the one you get."],
+];
+---
+<BaseLayout
+  title="Price, Markup and Margin Calculator for Shopify (Free) | Optifin"
+  description="Free pricing calculator: set a selling price from a target margin, convert markup to margin, and see the profit per unit after costs."
+  breadcrumbs={[{ name: "Free tools", href: "/tools/" }, { name: "Price, markup and margin calculator", href: url }]}
+  schema={toolSchema("Price, Markup and Margin Calculator", faq)}
+  headerTone="dark"
+>
+  <PageHero eyebrow="Free tool" title="Price, markup and margin calculator" lead="Find the price that hits your target margin, and see why a 100% markup is only a 50% margin." />
+  <CalcLayout title="Price, markup and margin calculator">
+    <Fragment slot="inputs">
+      <CalcField id="cost" label="Cost per unit" hint="Product, packaging and any per-unit costs." prefix="$" value="18" />
+      <CalcField id="var" label="Shipping and fees per unit" hint="Optional: costs you pay on each sale." prefix="$" value="4" />
+      <CalcField id="target" label="Target margin" suffix="%" value="55" step="0.5" />
+      <CalcField id="price" label="Or check an existing price" hint="Optional: leave at 0 to use the target." prefix="$" value="0" />
+    </Fragment>
+    <Fragment slot="result">
+      <p class="label" id="headLabel">Price for your target margin</p>
+      <p class="big" id="priceOut">—</p>
+      <dl>
+        <dt>Margin</dt><dd id="marginOut">—</dd>
+        <dt>Markup on cost</dt><dd id="markupOut">—</dd>
+        <dt>Profit per unit</dt><dd id="profitOut">—</dd>
+      </dl>
+      <a class="btn btn--primary cta" href={installUrl("tool-pricing")}>See real margin per product</a>
+    </Fragment>
+
+    <h2>Formulas</h2>
+    <p><strong>Price = total cost ÷ (1 − target margin).</strong> <strong>Margin = (price − cost) ÷ price.</strong> <strong>Markup = (price − cost) ÷ cost.</strong> Total cost here is cost per unit plus shipping and fees per unit.</p>
+    <h2>Example</h2>
+    <p>A unit costs $18 plus $4 of shipping and fees: $22 in total. For a 55% margin the price is $22 ÷ 0.45 = $48.89, a 122% markup and $26.89 profit per unit.</p>
+    <h2>What this calculator leaves out</h2>
+    <p>Discounts, refunds and ad spend all come out of the margin after the sale. <a href="/features/orders-and-products/">Optifin's product analytics</a> shows the margin each product actually earned once those are included.</p>
+    <h2>Questions</h2>
+    {faq.map(([q, a]) => (<><h3>{q}</h3><p>{a}</p></>))}
+  </CalcLayout>
+</BaseLayout>
+
+<script>
+  import { bind, num, set, money, pct } from "../../scripts/calc";
+  bind(() => {
+    const cost = num("cost") + num("var");
+    const target = Math.min(num("target"), 99.9) / 100;
+    const given = num("price");
+    const price = given > 0 ? given : target < 1 ? cost / (1 - target) : 0;
+    set("headLabel", given > 0 ? "Your price" : "Price for your target margin");
+    set("priceOut", price ? money(price) : "—");
+    set("marginOut", price ? pct((price - cost) / price) : "—");
+    set("markupOut", cost ? pct((price - cost) / cost, 0) : "—");
+    set("profitOut", price ? money(price - cost) : "—");
+  });
+</script>

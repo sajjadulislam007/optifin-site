@@ -1,0 +1,51 @@
+---
+// Product mega menu: every live feature with an icon and one line, plus a
+// "new" card and links to all features, integrations and the roadmap.
+import MegaMenu from "./MegaMenu.astro";
+import Icon from "../Icon.astro";
+import { PRODUCT_ITEMS } from "../../data/nav";
+interface Props { variant: "desktop" | "mobile"; current?: boolean }
+const { variant, current = false } = Astro.props;
+const extras = [
+  { href: "/features/", label: "All features" },
+  { href: "/integrations/", label: "Integrations" },
+  { href: "/coming-soon/", label: "Roadmap" },
+];
+---
+{variant === "desktop" ? (
+  <MegaMenu id="mm-product" label="Product" current={current} width={1080}>
+    <div class="mm-cols product">
+      <section class="mm-col" aria-labelledby="mm-product-title">
+        <h2 id="mm-product-title" class="mm-title">Platform</h2>
+        <ul class="mm-list two">
+          {PRODUCT_ITEMS.map((item) => (
+            <li><a class="mm-item" href={item.href}><span class="mm-ico"><Icon name={item.icon} size={18} /></span><span><strong>{item.label}</strong><small>{item.blurb}</small></span></a></li>
+          ))}
+        </ul>
+      </section>
+      <section class="mm-col" aria-label="Highlights">
+        <a class="mm-feature" href="/features/profit-dashboard/">
+          <span class="mm-kicker">New</span>
+          <strong>Today vs yesterday, and click any number</strong>
+          <p>See today against yesterday at the same time, and open the orders behind any figure.</p>
+          <span class="mm-go">See the dashboard <Icon name="arrow" size={14} /></span>
+        </a>
+        <ul class="mm-list">{extras.map((e) => <li><a class="mm-link" href={e.href}>{e.label} <Icon name="arrow" size={14} /></a></li>)}</ul>
+      </section>
+    </div>
+  </MegaMenu>
+) : (
+  <details class="m-menu">
+    <summary>Product <svg viewBox="0 0 12 12" width="14" height="14" aria-hidden="true"><path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" /></svg></summary>
+    <div class="m-groups">
+      <div><p>Platform</p>{PRODUCT_ITEMS.map((i) => <a href={i.href}>{i.label}</a>)}</div>
+      <div><p>More</p>{extras.map((e) => <a href={e.href}>{e.label}</a>)}</div>
+    </div>
+  </details>
+)}
+
+<style>
+  .product { grid-template-columns: 1.9fr 1fr; }
+  .two { grid-template-columns: 1fr 1fr; column-gap: 18px; }
+  .mm-col :global(.mm-list) { margin-top: 4px; }
+</style>

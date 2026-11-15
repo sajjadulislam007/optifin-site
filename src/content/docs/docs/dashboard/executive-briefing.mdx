@@ -1,0 +1,29 @@
+---
+title: "Executive briefing"
+description: "How the Optifin executive briefing finds what changed and what needs attention, and how to act on it."
+sidebar:
+  order: 4
+---
+
+import { Image } from "astro:assets";
+import dashboardBriefing from "../../../../assets/screens/dashboard-briefing.png";
+
+
+The briefing compares the selected period with the comparison period and shows two things side by side.
+
+<Image src={dashboardBriefing} alt="Executive briefing with what changed and needs attention" widths={[800, 1200, 1600]} sizes="(max-width: 900px) 100vw, 46rem" />
+
+<p class="sample-note">Shown with sample data.</p>
+
+
+- **What changed:** the most important changes in plain language, for example "Refund value increased 17.7%". Changes are only shown when both periods are complete.
+- **Needs attention:** open Action Center cases that need a decision, ranked by urgency, with the fix one click away.
+
+Select **Full briefing** for the complete list and **View breakdown** to open the Profit and Loss report for the same period.
+
+## Related
+
+- [Action Center](/docs/action-center/cases/)
+- [Profit and Loss report](/docs/reports/profit-and-loss/)
+
+Still stuck? Email [support@optifin.app](mailto:support@optifin.app).

@@ -1,0 +1,61 @@
+/* Optifin design tokens. Brand colours come from the logo: a teal → blue
+   gradient (#2DD4BF → #2563EB) on deep navy. Shared by the marketing pages
+   and Starlight (listed in customCss). Amber stays a status colour only. */
+:root {
+  --navy-950: #050d1c;
+  --navy-900: #071529;
+  --navy-800: #0d1f3a;
+  --navy-700: #16304f;
+  --ink: #0b1220;
+  --ink-soft: #4a5568;
+  --ink-muted: #6b7686;
+  --surface: #ffffff;
+  --surface-2: #f6f7f9;
+  --surface-3: #eef1f5;
+  --line: #e3e8ef;
+  --line-strong: #cfd6e0;
+
+  --brand-300: #5eead4;
+  --brand-400: #2dd4bf;
+  --brand-500: #3b82f6;
+  --brand-600: #2563eb;
+  --brand-700: #1d4ed8;
+  --brand-gradient: linear-gradient(135deg, #2dd4bf 0%, #3b82f6 55%, #2563eb 100%);
+
+  --profit: #0f9f6e;
+  --loss: #d64545;
+  --amber-bg: #fff3c4;
+  --amber-ink: #7a5300;
+
+  --font-display: "Outfit Variable", "Outfit", system-ui, sans-serif;
+  --font-body: "Inter Variable", "Inter", system-ui, sans-serif;
+
+  --radius-sm: 10px;
+  --radius: 16px;
+  --radius-lg: 24px;
+  --radius-xl: 32px;
+
+  --shadow-sm: 0 1px 2px rgb(7 21 41 / 0.06), 0 1px 1px rgb(7 21 41 / 0.04);
+  --shadow: 0 10px 30px -12px rgb(7 21 41 / 0.18), 0 2px 6px rgb(7 21 41 / 0.06);
+  --shadow-lg: 0 40px 80px -30px rgb(7 21 41 / 0.35), 0 12px 24px -12px rgb(7 21 41 / 0.18);
+  --shadow-glow: 0 30px 120px -20px rgb(37 99 235 / 0.45);
+
+  --container: 1200px;
+  --gutter: clamp(20px, 4vw, 40px);
+  --section: clamp(80px, 11vw, 160px);
+}
+
+/* Starlight theme (its :root is dark, [data-theme='light'] is light). */
+:root {
+  --sl-font: var(--font-body);
+  --sl-color-accent-low: #0b2a5c;
+  --sl-color-accent: #3b82f6;
+  --sl-color-accent-high: #bfdbfe;
+  --sl-color-black: #050d1c;
+  --sl-color-gray-6: #0d1f3a;
+}
+:root[data-theme="light"] {
+  --sl-color-accent-low: #dbeafe;
+  --sl-color-accent: #1d4ed8;
+  --sl-color-accent-high: #0b2a5c;
+}

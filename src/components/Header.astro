@@ -1,0 +1,106 @@
+---
+import Logo from "./Logo.astro";
+import ResourcesMenu from "./ResourcesMenu.astro";
+import ProductMenu from "./nav/ProductMenu.astro";
+import SolutionsMenu from "./nav/SolutionsMenu.astro";
+import { installUrl } from "../data/site";
+interface Props { tone?: "dark" | "light" }
+const { tone = "light" } = Astro.props;
+const path = Astro.url.pathname;
+// Header: Product · Solutions · Pricing · Resources (pattern shared by the
+// profit-analytics sites we reviewed: a product mega menu with icons and one
+// line each, solutions by problem and role, resources, one primary CTA).
+const inResources = ["/docs/", "/guides/", "/tools/", "/integrations/", "/changelog/", "/support/", "/security/"].some((p) => path.startsWith(p));
+const inProduct = ["/features/", "/coming-soon/"].some((p) => path.startsWith(p));
+---
+<header class="site-header" data-tone={tone}>
+  <div class="container bar">
+    <a href="/" class="brand" aria-label="Optifin home">
+      <span class="brand-light"><Logo tone="light" size={32} /></span>
+      <span class="brand-dark"><Logo tone="dark" size={30} /></span>
+    </a>
+    <nav class="nav" aria-label="Main">
+      <ProductMenu variant="desktop" current={inProduct} />
+      <SolutionsMenu variant="desktop" />
+      <a href="/pricing/" aria-current={path.startsWith("/pricing/") ? "page" : undefined}>Pricing</a>
+      <ResourcesMenu variant="desktop" current={inResources} />
+    </nav>
+    <div class="actions">
+      <a class="btn btn--primary btn--sm" href={installUrl("header")}>Install on Shopify</a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="mobile-nav" aria-label="Open menu">
+        <span></span><span></span>
+      </button>
+    </div>
+  </div>
+  <div id="mobile-nav" class="mobile-nav" hidden>
+    <nav class="container" aria-label="Mobile">
+      <ProductMenu variant="mobile" />
+      <SolutionsMenu variant="mobile" />
+      <a href="/pricing/">Pricing</a>
+      <ResourcesMenu variant="mobile" />
+      <a class="btn btn--primary" href={installUrl("mobile-menu")}>Install on Shopify</a>
+    </nav>
+  </div>
+</header>
+
+<style>
+  .site-header {
+    position: sticky; top: 0; z-index: 50;
+    transition: background 0.3s, box-shadow 0.3s, color 0.3s;
+    color: var(--ink);
+  }
+  .site-header[data-tone="dark"] { color: #fff; }
+  .site-header.is-stuck { background: rgb(255 255 255 / 0.82); color: var(--ink); backdrop-filter: saturate(1.6) blur(14px); -webkit-backdrop-filter: saturate(1.6) blur(14px); box-shadow: 0 1px 0 var(--line); }
+  .bar { display: flex; align-items: center; justify-content: space-between; gap: 24px; height: 76px; transition: height 0.3s; }
+  .is-stuck .bar { height: 64px; }
+  .brand { display: inline-flex; text-decoration: none; }
+  .brand-dark { display: none; }
+  .site-header[data-tone="dark"]:not(.is-stuck) .brand-light { display: none; }
+  .site-header[data-tone="dark"]:not(.is-stuck) .brand-dark { display: inline-flex; }
+  .nav { display: flex; align-items: center; gap: 6px; }
+  .nav a {
+    padding: 8px 14px; border-radius: 999px; text-decoration: none; font-weight: 500; font-size: 15.5px;
+    color: inherit; opacity: 0.82; transition: opacity 0.2s, background 0.2s;
+  }
+  .nav a:hover, .nav a[aria-current="page"] { opacity: 1; background: rgb(127 127 127 / 0.12); }
+  .actions { display: flex; align-items: center; gap: 12px; }
+  .menu-toggle { display: none; width: 44px; height: 44px; border: 0; background: transparent; color: inherit; cursor: pointer; border-radius: 12px; position: relative; }
+  .menu-toggle span { position: absolute; left: 12px; right: 12px; height: 2px; background: currentColor; border-radius: 2px; transition: transform 0.3s; }
+  .menu-toggle span:first-child { top: 17px; }
+  .menu-toggle span:last-child { top: 25px; }
+  .menu-toggle[aria-expanded="true"] span:first-child { transform: translateY(4px) rotate(45deg); }
+  .menu-toggle[aria-expanded="true"] span:last-child { transform: translateY(-4px) rotate(-45deg); }
+  .mobile-nav { max-height: calc(100dvh - 64px); overflow-y: auto; background: #fff; color: var(--ink); border-top: 1px solid var(--line); box-shadow: var(--shadow); }
+  .mobile-nav nav { display: grid; gap: 4px; padding-block: 16px 24px; }
+  .mobile-nav a:not(.btn) { padding: 14px 4px; font-size: 18px; font-weight: 500; text-decoration: none; border-bottom: 1px solid var(--line); }
+  .mobile-nav .btn { margin-top: 12px; }
+  .mobile-nav :global(.m-menu) { border-bottom: 1px solid var(--line); }
+  .mobile-nav :global(.m-menu summary) { display: flex; align-items: center; justify-content: space-between; padding: 14px 4px; font-size: 18px; font-weight: 500; cursor: pointer; list-style: none; }
+  .mobile-nav :global(.m-menu summary::-webkit-details-marker) { display: none; }
+  .mobile-nav :global(.m-menu[open] summary svg) { transform: rotate(180deg); }
+  .mobile-nav :global(.m-groups) { display: grid; gap: 18px; padding: 4px 4px 18px; }
+  .mobile-nav :global(.m-groups div) { display: grid; gap: 2px; }
+  .mobile-nav :global(.m-groups p) { margin: 0 0 4px; font-size: 12.5px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-muted); }
+  .mobile-nav :global(.m-groups a) { padding: 7px 0; font-size: 16px; text-decoration: none; color: var(--ink-soft); border-bottom: 0; }
+  @media (max-width: 900px) {
+    .nav { display: none; }
+    .menu-toggle { display: inline-block; }
+    .actions .btn { display: none; }
+  }
+</style>
+
+<script>
+  const header = document.querySelector<HTMLElement>(".site-header");
+  const toggle = document.querySelector<HTMLButtonElement>(".menu-toggle");
+  const panel = document.getElementById("mobile-nav");
+  const onScroll = () => header?.classList.toggle("is-stuck", window.scrollY > 12);
+  onScroll();
+  window.addEventListener("scroll", onScroll, { passive: true });
+  toggle?.addEventListener("click", () => {
+    const open = toggle.getAttribute("aria-expanded") !== "true";
+    toggle.setAttribute("aria-expanded", String(open));
+    toggle.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+    if (panel) panel.hidden = !open;
+    header?.classList.toggle("is-stuck", open || window.scrollY > 12);
+  });
+</script>

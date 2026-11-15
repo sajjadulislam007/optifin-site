@@ -1,0 +1,17 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import PageHero from "../components/PageHero.astro";
+---
+<BaseLayout title="Page not found | Optifin" description="This page does not exist." noindex headerTone="dark">
+  <PageHero eyebrow="404" title="This page took a loss." lead="It does not exist, or it moved. Try one of these instead." center>
+    <div class="links">
+      <a class="btn btn--primary" href="/">Home</a>
+      <a class="btn btn--ghost" href="/docs/">Docs</a>
+      <a class="btn btn--ghost" href="/features/">Features</a>
+    </div>
+  </PageHero>
+</BaseLayout>
+<style>
+  .links { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin-top: 10px; }
+  .links .btn--ghost { color: #fff; }
+</style>

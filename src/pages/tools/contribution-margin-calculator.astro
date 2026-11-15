@@ -1,0 +1,68 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import PageHero from "../../components/PageHero.astro";
+import CalcLayout from "../../components/CalcLayout.astro";
+import CalcField from "../../components/CalcField.astro";
+import { installUrl } from "../../data/site";
+import { toolSchema, toolUrl } from "../../data/tools";
+const url = toolUrl("contribution-margin-calculator");
+const faq: [string, string][] = [
+  ["What is contribution margin?", "Contribution margin is revenue minus the costs that rise with every sale: product cost, shipping, payment fees, returns and variable marketing. It is what each sale leaves to pay for fixed costs and profit."],
+  ["How is contribution margin different from gross margin?", "Gross margin subtracts only product cost. Contribution margin also subtracts shipping, payment fees, returns and, after ads, ad spend, so it is closer to what an order really earns."],
+  ["What is a good contribution margin for a Shopify store?", "There is no single benchmark. What matters is that contribution after ads is positive and large enough to cover your fixed costs such as apps, staff and rent."],
+];
+---
+<BaseLayout
+  title="Contribution Margin Calculator for Shopify (Free) | Optifin"
+  description="Free contribution margin calculator for Shopify: subtract product cost, shipping, payment fees, returns and ads to see what each sale really leaves."
+  breadcrumbs={[{ name: "Free tools", href: "/tools/" }, { name: "Contribution margin calculator", href: url }]}
+  schema={toolSchema("Contribution Margin Calculator", faq)}
+  headerTone="dark"
+>
+  <PageHero eyebrow="Free tool" title="Contribution margin calculator" lead="See what your sales leave after every cost that grows with each order, before and after advertising." />
+  <CalcLayout title="Contribution margin calculator">
+    <Fragment slot="inputs">
+      <CalcField id="rev" label="Net revenue" hint="Sales after discounts, excluding tax, for any period." prefix="$" value="20000" />
+      <CalcField id="cogs" label="Product costs (COGS)" prefix="$" value="7200" />
+      <CalcField id="ship" label="Shipping and fulfilment" prefix="$" value="2100" />
+      <CalcField id="fees" label="Payment fees" prefix="$" value="640" />
+      <CalcField id="ret" label="Refunds and returns cost" prefix="$" value="700" />
+      <CalcField id="ads" label="Ad spend" prefix="$" value="4200" />
+    </Fragment>
+    <Fragment slot="result">
+      <p class="label">Contribution margin after ads</p>
+      <p class="big" id="cm2">—</p>
+      <dl>
+        <dt>Contribution before ads</dt><dd id="c1">—</dd>
+        <dt>Contribution margin before ads</dt><dd id="cm1">—</dd>
+        <dt>Contribution after ads</dt><dd id="c2">—</dd>
+        <dt>Kept from every $1 of revenue</dt><dd id="per">—</dd>
+      </dl>
+      <a class="btn btn--primary cta" href={installUrl("tool-contribution")}>Track it for every order</a>
+    </Fragment>
+
+    <h2>How contribution margin is calculated</h2>
+    <p><strong>Contribution = net revenue − product costs − shipping − payment fees − refunds and returns.</strong> Subtract ad spend as well to get contribution after ads. Divide either by net revenue for the margin.</p>
+    <p>Fixed costs such as apps, salaries and rent are left out on purpose: contribution shows whether selling more makes you more money. Net profit then subtracts the fixed costs.</p>
+    <h2>Example</h2>
+    <p>$20,000 of sales with $7,200 product cost, $2,100 shipping, $640 fees and $700 returns leaves $9,360 before ads, a 46.8% margin. After $4,200 of ads, $5,160 remains, 25.8% of revenue.</p>
+    <h2>What this calculator leaves out</h2>
+    <p>It uses totals you enter, so a product with no recorded cost silently lowers your costs. <a href="/features/profit-dashboard/">Optifin</a> shows how much of your product costs are actually recorded, so a missing cost is never treated as $0.</p>
+    <h2>Questions</h2>
+    {faq.map(([q, a]) => (<><h3>{q}</h3><p>{a}</p></>))}
+  </CalcLayout>
+</BaseLayout>
+
+<script>
+  import { bind, num, set, money, pct } from "../../scripts/calc";
+  bind(() => {
+    const rev = num("rev");
+    const c1 = rev - num("cogs") - num("ship") - num("fees") - num("ret");
+    const c2 = c1 - num("ads");
+    set("c1", money(c1));
+    set("c2", money(c2));
+    set("cm1", rev ? pct(c1 / rev) : "—");
+    set("cm2", rev ? pct(c2 / rev) : "—");
+    set("per", rev ? money(c2 / rev) : "—");
+  });
+</script>

@@ -1,0 +1,61 @@
+---
+import { getCollection, render } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { SITE, installUrl } from "../../data/site";
+
+export async function getStaticPaths() {
+  const guides = await getCollection("guides");
+  return guides.map((guide) => ({ params: { id: guide.id }, props: { guide } }));
+}
+const { guide } = Astro.props;
+const { Content } = await render(guide);
+const date = (d: Date) => d.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" });
+const schema = [{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  headline: guide.data.title,
+  description: guide.data.description,
+  datePublished: guide.data.published.toISOString(),
+  dateModified: (guide.data.updated || guide.data.published).toISOString(),
+  author: { "@type": "Organization", name: SITE.name },
+  publisher: { "@type": "Organization", name: SITE.name },
+  mainEntityOfPage: new URL(`/guides/${guide.id}/`, Astro.site).toString(),
+}];
+---
+<BaseLayout
+  title={`${guide.data.title} | Optifin`}
+  description={guide.data.description}
+  breadcrumbs={[{ name: "Guides", href: "/guides/" }, { name: guide.data.title, href: `/guides/${guide.id}/` }]}
+  schema={schema}
+>
+  <article class="section">
+    <div class="container head">
+      <a class="back" href="/guides/">← All guides</a>
+      <span class="badge">{guide.data.tag}</span>
+      <h1 class="display title">{guide.data.title}</h1>
+      <p class="lead">{guide.data.description}</p>
+      <p class="meta">{date(guide.data.updated || guide.data.published)} · {guide.data.readingMinutes} min read</p>
+    </div>
+    <div class="container body">
+      <div class="prose"><Content /></div>
+      <aside class="side card">
+        <p class="eyebrow">Try it</p>
+        <h2 class="h3">See your real profit in Optifin</h2>
+        <p>Every cost applied to every order, with coverage on every number. Free Starter plan.</p>
+        <a class="btn btn--primary" href={installUrl(`guide-${guide.id}`)}>Install on Shopify</a>
+      </aside>
+    </div>
+  </article>
+</BaseLayout>
+
+<style>
+  .head { display: grid; gap: 18px; max-width: 900px; margin-left: max(var(--gutter), calc((100vw - var(--container)) / 2)); }
+  .back { color: var(--ink-muted); text-decoration: none; font-weight: 500; }
+  .head .badge { justify-self: start; }
+  .title { font-size: clamp(38px, 5.4vw, 66px); }
+  .meta { color: var(--ink-muted); font-size: 15px; }
+  .body { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 64px; margin-top: 56px; align-items: start; }
+  .side { padding: 26px; display: grid; gap: 14px; position: sticky; top: 100px; background: var(--surface-2); }
+  .side p:not(.eyebrow) { color: var(--ink-soft); font-size: 15.5px; }
+  @media (max-width: 1000px) { .body { grid-template-columns: 1fr; } .side { position: static; } }
+</style>

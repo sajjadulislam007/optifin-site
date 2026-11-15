@@ -1,0 +1,16 @@
+/* Docs theming on top of Starlight (unlayered, so it overrides @layer starlight). */
+:root {
+  --sl-content-width: 46rem;
+}
+.sl-markdown-content h1,
+.sl-markdown-content h2,
+.sl-markdown-content h3,
+h1#_top {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+}
+.site-title { font-family: var(--font-display); font-weight: 650; }
+.site-title img { height: 30px; width: auto; }
+.site-title { gap: 0.6rem; font-size: 1.15rem; letter-spacing: -0.02em; }
+.sl-markdown-content img { border-radius: 14px; border: 1px solid var(--sl-color-gray-5); }
+.sl-markdown-content .sample-note { font-size: 0.85em; color: var(--sl-color-gray-3); margin-top: 0.5em; }

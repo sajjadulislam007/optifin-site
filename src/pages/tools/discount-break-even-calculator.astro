@@ -1,0 +1,68 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import PageHero from "../../components/PageHero.astro";
+import CalcLayout from "../../components/CalcLayout.astro";
+import CalcField from "../../components/CalcField.astro";
+import { installUrl } from "../../data/site";
+import { toolSchema, toolUrl } from "../../data/tools";
+const url = toolUrl("discount-break-even-calculator");
+const faq: [string, string][] = [
+  ["How much do sales need to rise to cover a discount?", "Divide the profit per order before the discount by the profit per order after it. If an order earns $20 normally and $12 when discounted, you need 20 ÷ 12 = 1.67 times as many orders, 67% more, just to earn the same."],
+  ["What is the largest discount I can offer?", "The discount at which profit per order reaches zero: profit per order before the discount divided by the price. Beyond it, every discounted order loses money."],
+  ["Does a discount change my break-even ROAS?", "Yes. A discount lowers the margin on each order, so ads must return more revenue per dollar to break even. The calculator shows break-even ROAS at the discounted price."],
+];
+---
+<BaseLayout
+  title="Discount Break-even Calculator for Shopify Sales and BFCM (Free) | Optifin"
+  description="Free discount calculator: see how many extra sales a discount needs to pay for itself, the largest discount you can afford, and break-even ROAS on sale."
+  breadcrumbs={[{ name: "Free tools", href: "/tools/" }, { name: "Discount break-even calculator", href: url }]}
+  schema={toolSchema("Discount Break-even Calculator", faq)}
+  headerTone="dark"
+>
+  <PageHero eyebrow="Free tool" title="Discount break-even calculator" lead="Before a sale or Black Friday, see how many more orders a discount needs just to earn what you earn today." />
+  <CalcLayout title="Discount break-even calculator">
+    <Fragment slot="inputs">
+      <CalcField id="price" label="Average order value before discount" prefix="$" value="70" />
+      <CalcField id="cogs" label="Product cost per order" prefix="$" value="26" />
+      <CalcField id="var" label="Shipping and fees per order" prefix="$" value="9" />
+      <CalcField id="disc" label="Discount" suffix="%" value="20" step="1" />
+    </Fragment>
+    <Fragment slot="result">
+      <p class="label">Extra orders needed to break even</p>
+      <p class="big" id="liftOut">—</p>
+      <dl>
+        <dt>Profit per order now</dt><dd id="p0">—</dd>
+        <dt>Profit per order on sale</dt><dd id="p1">—</dd>
+        <dt>Largest discount before loss</dt><dd id="maxOut">—</dd>
+        <dt>Break-even ROAS on sale</dt><dd id="beOut">—</dd>
+      </dl>
+      <a class="btn btn--primary cta" href={installUrl("tool-discount")}>See what past discounts earned</a>
+    </Fragment>
+
+    <h2>Formulas</h2>
+    <p><strong>Profit per order = price × (1 − discount) − product cost − shipping and fees.</strong> <strong>Orders needed = profit now ÷ profit on sale</strong>; the extra orders are that ratio minus one. <strong>Largest discount = profit now ÷ price.</strong> <strong>Break-even ROAS = discounted price ÷ profit on sale.</strong></p>
+    <h2>Example</h2>
+    <p>A $70 order with $26 product cost and $9 of shipping and fees earns $35. At 20% off it earns $21, so you need 1.67 times as many orders (67% more) to earn the same. Any discount above 50% loses money on every order, and ads must return at least 2.67× to break even during the sale.</p>
+    <h2>What this calculator leaves out</h2>
+    <p>It assumes costs per order stay the same and ignores repeat purchases from new customers. <a href="/features/customers/">Optifin's discount analytics</a> shows what each discount code actually earned after costs.</p>
+    <h2>Questions</h2>
+    {faq.map(([q, a]) => (<><h3>{q}</h3><p>{a}</p></>))}
+  </CalcLayout>
+</BaseLayout>
+
+<script>
+  import { bind, num, set, money, pct, times } from "../../scripts/calc";
+  bind(() => {
+    const price = num("price");
+    const d = Math.min(num("disc"), 100) / 100;
+    const costs = num("cogs") + num("var");
+    const p0 = price - costs;
+    const sale = price * (1 - d);
+    const p1 = sale - costs;
+    set("p0", money(p0));
+    set("p1", money(p1));
+    set("liftOut", p0 <= 0 ? "Loses money already" : p1 <= 0 ? "Not reachable" : `+${((p0 / p1 - 1) * 100).toFixed(0)}%`);
+    set("maxOut", price && p0 > 0 ? pct(p0 / price, 0) : "—");
+    set("beOut", p1 > 0 ? times(sale / p1) : "Not reachable");
+  });
+</script>

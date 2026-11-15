@@ -1,0 +1,35 @@
+---
+title: "Custom costs"
+description: "Add operating and per-order costs in Optifin: recurring or one-off, with conditions such as country or sales channel."
+sidebar:
+  order: 3
+---
+
+import { Image } from "astro:assets";
+import costsCustom from "../../../../assets/screens/costs-custom.png";
+
+
+Custom costs cover everything that is not a product, shipping or payment cost: app subscriptions, salaries, rent, packaging, agency fees.
+
+<Image src={costsCustom} alt="Custom costs list with behaviors and statuses" widths={[800, 1200, 1600]} sizes="(max-width: 900px) 100vw, 46rem" />
+
+<p class="sample-note">Shown with sample data.</p>
+
+
+## Two behaviors
+
+- **Operating** costs are fixed costs for the business. They reduce net profit.
+- **Per-order (variable)** costs apply to each matching order. They reduce contribution profit.
+
+## Schedule and conditions
+
+Costs can be one-off or recurring, start and end on set dates, and apply only to orders that match conditions such as country, sales channel or order value.
+
+Every change is kept in the cost's history.
+
+## Related
+
+- [How net profit is calculated](/docs/numbers/how-profit-is-calculated/)
+- [Shipping and fees](/docs/costs/shipping-and-fees/)
+
+Still stuck? Email [support@optifin.app](mailto:support@optifin.app).

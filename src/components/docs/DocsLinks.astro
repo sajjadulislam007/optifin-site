@@ -1,0 +1,24 @@
+---
+// Replaces Starlight's social icons in the docs header with links back to
+// the marketing site and the App Store install.
+import { installUrl } from "../../data/site";
+---
+<nav class="docs-links" aria-label="Site">
+  <a href="/">Website</a>
+  <a href="/tools/">Calculators</a>
+  <a href="/integrations/">Integrations</a>
+  <a href="/pricing/">Pricing</a>
+  <a class="docs-install" href={installUrl("docs-header")}>Install on Shopify</a>
+</nav>
+
+<style>
+  .docs-links { display: flex; align-items: center; gap: 18px; font-size: 14px; font-weight: 500; }
+  .docs-links a { color: var(--sl-color-gray-2); text-decoration: none; }
+  .docs-links a:hover { color: var(--sl-color-white); }
+  .docs-install {
+    color: #fff !important; padding: 7px 14px; border-radius: 999px;
+    background: linear-gradient(135deg, #2dd4bf, #2563eb); font-weight: 600;
+  }
+  @media (max-width: 72rem) { .docs-links a[href="/tools/"], .docs-links a[href="/integrations/"] { display: none; } }
+  @media (max-width: 50rem) { .docs-links a:not(.docs-install) { display: none; } }
+</style>

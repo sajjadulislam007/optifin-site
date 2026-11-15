@@ -1,0 +1,59 @@
+---
+// DRAFT: written from the app's documented data handling
+// (optifin/app/services/DATA_RETENTION.md, docs/modules/25). Must be reviewed
+// by the owner/legal counsel before launch.
+import ProseLayout from "../layouts/ProseLayout.astro";
+---
+<ProseLayout
+  title="Privacy Policy | Optifin"
+  heading="Privacy policy"
+  eyebrow="Legal"
+  description="How Optifin collects, uses, stores and deletes data from Shopify stores that install the app."
+  path="/privacy/"
+  updated="November 14, 2026"
+>
+  <p>This policy explains how Optifin ("we", "us") handles information when a Shopify merchant installs and uses the Optifin app, and when anyone visits optifin.app.</p>
+
+  <h2>Information we access</h2>
+  <p>When you install Optifin, Shopify grants us read-only access to store data needed to calculate profit:</p>
+  <ul>
+    <li>Orders, refunds, discounts and transactions;</li>
+    <li>Products, variants, costs per item and inventory by location;</li>
+    <li>Customer records (used for lifetime value, cohorts and segments);</li>
+    <li>Fulfillments and returns.</li>
+  </ul>
+  <p>We also store information you enter in the app, such as product costs, shipping rules, payment fees, custom costs, settings, saved views and reports.</p>
+
+  <h2>Customer personal information</h2>
+  <p>Optifin is designed to work without storing your customers' direct identity. We do not intentionally store customer names, email addresses, phone numbers or postal addresses. Identifiers used for attribution (visitor, session, cart, checkout and click) are stored only as keyed one-way hashes.</p>
+
+  <h2>How we use information</h2>
+  <ul>
+    <li>To calculate and display revenue, costs, profit and related metrics for your store;</li>
+    <li>To keep the app working: synchronization, reconciliation, error monitoring and support;</li>
+    <li>To bill you through Shopify for your chosen plan.</li>
+  </ul>
+  <p>We do not sell store or customer data, and we do not use it to advertise to your customers.</p>
+
+  <h2>Sharing</h2>
+  <p>We share information only with service providers that host and operate the app (for example cloud hosting, database and error-monitoring providers) under agreements that limit their use to providing services to us, and where required by law.</p>
+
+  <h2>Retention and deletion</h2>
+  <ul>
+    <li>When you uninstall, access ends immediately.</li>
+    <li>When Shopify sends its shop deletion request (48 hours after uninstall), we delete your store's data.</li>
+    <li>We act on Shopify's customer redaction and customer data requests.</li>
+  </ul>
+
+  <h2>Security</h2>
+  <p>See <a href="/security/">Security and data</a> for how we protect information.</p>
+
+  <h2>Website visitors</h2>
+  <p>optifin.app uses privacy-friendly, cookie-free analytics to count visits. We do not use advertising cookies on this site. If you email us, we use your address only to reply.</p>
+
+  <h2>Your rights</h2>
+  <p>Depending on where you live, you may have rights to access, correct or delete personal information. Merchants can request deletion by uninstalling or by emailing us. Shoppers should contact the store they bought from; we will help the store respond.</p>
+
+  <h2>Contact</h2>
+  <p>Questions about this policy: <a href="mailto:support@optifin.app">support@optifin.app</a>.</p>
+</ProseLayout>

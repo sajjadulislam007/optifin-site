@@ -1,0 +1,23 @@
+---
+// Inner-page hero: dark band with glow, eyebrow, title and lead.
+interface Props { eyebrow?: string; title: string; lead?: string; center?: boolean }
+const { eyebrow, title, lead, center = false } = Astro.props;
+---
+<section class:list={["page-hero", { center }]}>
+  <div class="glow" aria-hidden="true"></div>
+  <div class="container inner">
+    {eyebrow && <p class="eyebrow">{eyebrow}</p>}
+    <h1 class="display page-title" data-reveal>{title}</h1>
+    {lead && <p class="lead" data-reveal>{lead}</p>}
+    <slot />
+  </div>
+</section>
+
+<style>
+  .page-hero { position: relative; overflow: hidden; background: var(--navy-900); color: #fff; padding: 150px 0 clamp(64px, 9vw, 110px); margin-top: -76px; }
+  .glow { position: absolute; width: 900px; height: 900px; right: -260px; top: -380px; border-radius: 50%; background: radial-gradient(circle, rgb(37 99 235 / 0.35), transparent 62%); }
+  .inner { position: relative; display: grid; gap: 22px; max-width: 900px; margin-left: max(var(--gutter), calc((100vw - var(--container)) / 2)); }
+  .center .inner { margin-inline: auto; text-align: center; justify-items: center; }
+  .page-title { font-size: clamp(40px, 6vw, 76px); }
+  .lead { color: #b8c4d6; max-width: 62ch; }
+</style>

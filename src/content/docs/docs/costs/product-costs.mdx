@@ -1,0 +1,38 @@
+---
+title: "Product costs"
+description: "Manage product costs (COGS) in Optifin: effective dates, suppliers, CSV import, history and missing-cost flags."
+sidebar:
+  order: 1
+---
+
+import { Image } from "astro:assets";
+import costsProducts from "../../../../assets/screens/costs-products.png";
+
+
+<Image src={costsProducts} alt="Product costs table with coverage and missing-cost flags" widths={[800, 1200, 1600]} sizes="(max-width: 900px) 100vw, 46rem" />
+
+<p class="sample-note">Shown with sample data.</p>
+
+
+## Effective-dated costs
+
+Each cost applies from its effective date. Add a new cost when a supplier changes price; earlier orders keep the old cost.
+
+## Import
+
+Download the CSV template, fill it in and import. You see a preview of every change before it is applied, and each import is kept in history.
+
+## Filters
+
+Filter by **cost state** (missing, confirmed and more) to find products that still need a cost. Sort by revenue to fix the products that matter most first.
+
+## What changes when you edit a cost
+
+Optifin recalculates the affected orders and shows the impact on profit for the period.
+
+## Related
+
+- [Add your product costs](/docs/getting-started/add-product-costs/)
+- [Custom costs](/docs/costs/custom-costs/)
+
+Still stuck? Email [support@optifin.app](mailto:support@optifin.app).

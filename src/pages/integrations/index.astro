@@ -1,0 +1,51 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import PageHero from "../../components/PageHero.astro";
+import Icon from "../../components/Icon.astro";
+import { INTEGRATIONS, PLANNED, STATUS_LABEL, integrationUrl } from "../../data/integrations";
+import { launched } from "../../data/site";
+const adsLive = launched(["metaAds", "googleAds"]);
+---
+<BaseLayout
+  title="Integrations: Shopify, Meta, Google and TikTok Ads | Optifin"
+  description={adsLive
+    ? "What Optifin connects to: Shopify, Meta Ads and Google Ads today, TikTok Ads next, with the exact data each one reads."
+    : "What Optifin connects to: Shopify today, with Meta Ads, Google Ads and TikTok Ads next, and the exact data each one reads."}
+  breadcrumbs={[{ name: "Integrations", href: "/integrations/" }]}
+  headerTone="dark"
+>
+  <PageHero eyebrow="Integrations" title="What Optifin connects to." lead="A short, honest list. Each page says exactly what data is read, what is not, and whether the connection is available today." />
+  <section class="section">
+    <div class="container">
+      <div class="grid" data-reveal-group>
+        {INTEGRATIONS.map((i) => (
+          <a class="card item" href={integrationUrl(i.slug)}>
+            <span class:list={["badge", i.status === "live" ? "badge--live" : "badge--soon"]}>{STATUS_LABEL[i.status]}</span>
+            <h2 class="h3">{i.name}</h2>
+            <p>{i.lead}</p>
+            <span class="link-arrow">What it reads <Icon name="arrow" size={16} /></span>
+          </a>
+        ))}
+      </div>
+      <h2 class="h3 planned-title" data-reveal>Planned</h2>
+      <p class="muted small" data-reveal>Not available yet. See <a href="/coming-soon/">Coming soon</a> for the full list.</p>
+      <ul class="planned" data-reveal-group>
+        {PLANNED.map((p) => <li class="card"><strong>{p.name}</strong><span>{p.body}</span></li>)}
+      </ul>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
+  .item { padding: 30px; display: grid; gap: 12px; align-content: start; text-decoration: none; transition: transform 0.3s, box-shadow 0.3s; }
+  .item:hover { transform: translateY(-4px); box-shadow: var(--shadow); }
+  .item .badge { justify-self: start; }
+  .item p { color: var(--ink-soft); }
+  .badge--live { background: rgb(15 159 110 / 0.12); color: #0a7a54; }
+  .planned-title { margin-top: 64px; margin-bottom: 6px; }
+  .planned { list-style: none; padding: 0; margin: 20px 0 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .planned li { padding: 18px 20px; display: grid; gap: 6px; font-size: 15px; box-shadow: none; }
+  .planned span { color: var(--ink-muted); }
+  @media (max-width: 900px) { .grid, .planned { grid-template-columns: 1fr; } }
+</style>

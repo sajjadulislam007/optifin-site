@@ -1,0 +1,74 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import PageHero from "../../components/PageHero.astro";
+import CalcLayout from "../../components/CalcLayout.astro";
+import { installUrl } from "../../data/site";
+const schema = [
+  {
+    "@context": "https://schema.org", "@type": "WebApplication", name: "Break-even ROAS Calculator",
+    applicationCategory: "BusinessApplication", operatingSystem: "Any", offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+  },
+  {
+    "@context": "https://schema.org", "@type": "FAQPage",
+    mainEntity: [
+      { "@type": "Question", name: "What is break-even ROAS?", acceptedAnswer: { "@type": "Answer", text: "Break-even ROAS is the return on ad spend at which advertising stops losing money. It equals 1 divided by your contribution margin before ad spend." } },
+      { "@type": "Question", name: "What is a good ROAS for Shopify?", acceptedAnswer: { "@type": "Answer", text: "Any ROAS above your break-even ROAS is profitable at the order level. A store with a 40% contribution margin breaks even at 2.5x; a store with a 25% margin needs 4x." } },
+    ],
+  },
+];
+---
+<BaseLayout
+  title="Break-even ROAS Calculator for Shopify (Free) | Optifin"
+  description="Calculate your break-even ROAS: the return on ad spend at which Shopify ads stop losing money, from your price, product cost, shipping and fees."
+  breadcrumbs={[{ name: "Free tools", href: "/tools/" }, { name: "Break-even ROAS calculator", href: "/tools/break-even-roas-calculator/" }]}
+  schema={schema}
+  headerTone="dark"
+>
+  <PageHero eyebrow="Free tool" title="Break-even ROAS calculator" lead="Find the minimum return on ad spend your store needs before advertising starts making money." />
+  <CalcLayout title="Break-even ROAS calculator">
+    <Fragment slot="inputs">
+      <label>Average order value <span class="hint">Revenue per order, excluding tax.</span><div class="field"><span>$</span><input type="number" inputmode="decimal" min="0" step="0.01" id="aov" value="64" /></div></label>
+      <label>Product cost per order<div class="field"><span>$</span><input type="number" inputmode="decimal" min="0" step="0.01" id="cogs" value="24" /></div></label>
+      <label>Shipping and fulfilment per order<div class="field"><span>$</span><input type="number" inputmode="decimal" min="0" step="0.01" id="ship" value="7" /></div></label>
+      <label>Payment and other variable costs per order<div class="field"><span>$</span><input type="number" inputmode="decimal" min="0" step="0.01" id="var" value="2.20" /></div></label>
+      <label>Your current ROAS <span class="hint">Optional: revenue from ads ÷ ad spend.</span><div class="field"><input class="pct" type="number" inputmode="decimal" min="0" step="0.1" id="roas" value="3.2" /><span class="suffix">×</span></div></label>
+    </Fragment>
+    <Fragment slot="result">
+      <p class="label">Break-even ROAS</p>
+      <p class="big" id="beOut">—</p>
+      <dl>
+        <dt>Contribution margin before ads</dt><dd id="cmOut">—</dd>
+        <dt>Contribution per order</dt><dd id="cOut">—</dd>
+        <dt>Your ROAS vs break-even</dt><dd id="vsOut">—</dd>
+      </dl>
+      <a class="btn btn--primary cta" href={installUrl("tool-roas")}>See it for your real store</a>
+    </Fragment>
+
+    <h2>What is break-even ROAS?</h2>
+    <p>Break-even ROAS is the return on ad spend at which advertising stops losing money. Below it, every sale from ads costs more than it earns; above it, ads are profitable at the order level.</p>
+    <p><strong>Break-even ROAS = 1 ÷ contribution margin before ad spend.</strong> Contribution margin is what is left of each order after product, shipping, payment and other variable costs, as a share of revenue.</p>
+    <h2>Example</h2>
+    <p>An order of $64 with $24 product cost, $7 shipping and $2.20 fees contributes $30.80, a 48.1% margin. Break-even ROAS is 1 ÷ 0.481 ≈ 2.08×. A campaign at 3.2× ROAS is profitable; one at 1.8× loses money on every order.</p>
+    <h2>Why it changes</h2>
+    <p>Discounts, refunds and rising supplier costs all lower contribution margin and raise your break-even ROAS. <a href="/features/profit-dashboard/">Optifin</a> tracks those costs for every order, so the margin behind your ad decisions is the real one.</p>
+    <p>Read more: <a href="/guides/break-even-roas-explained/">Break-even ROAS explained</a>.</p>
+  </CalcLayout>
+</BaseLayout>
+
+<script>
+  const $ = (id: string) => document.getElementById(id) as HTMLInputElement;
+  function calc() {
+    const v = (id: string) => Math.max(0, Number($(id).value) || 0);
+    const aov = v("aov");
+    const contribution = aov - v("cogs") - v("ship") - v("var");
+    const cm = aov ? contribution / aov : 0;
+    const be = cm > 0 ? 1 / cm : null;
+    $("beOut").textContent = be ? `${be.toFixed(2)}×` : "Not reachable";
+    $("cmOut").textContent = aov ? `${(cm * 100).toFixed(1)}%` : "—";
+    $("cOut").textContent = `$${contribution.toFixed(2)}`;
+    const roas = v("roas");
+    $("vsOut").textContent = !be || !roas ? "—" : roas >= be ? `Profitable (+${(roas - be).toFixed(2)}×)` : `Losing money (−${(be - roas).toFixed(2)}×)`;
+  }
+  document.querySelectorAll("input").forEach((i) => i.addEventListener("input", calc));
+  calc();
+</script>

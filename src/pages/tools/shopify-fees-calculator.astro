@@ -1,0 +1,91 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import PageHero from "../../components/PageHero.astro";
+import CalcLayout from "../../components/CalcLayout.astro";
+import CalcField from "../../components/CalcField.astro";
+import { installUrl } from "../../data/site";
+import { toolSchema, toolUrl } from "../../data/tools";
+const url = toolUrl("shopify-fees-calculator");
+// Plan prices (monthly billing) and third-party transaction fees as listed on
+// shopify.com/pricing for the US, checked 2026-11-14. Card processing rates
+// vary by country and plan and are not listed there, so the merchant enters
+// their own; the default is an example only.
+const PLANS = [
+  { key: "basic", name: "Basic", price: 25, thirdParty: 2 },
+  { key: "grow", name: "Grow", price: 65, thirdParty: 1 },
+  { key: "advanced", name: "Advanced", price: 399, thirdParty: 0.6 },
+];
+const faq: [string, string][] = [
+  ["What fees does Shopify charge?", "A monthly plan subscription, card processing on each payment, and, if you use a payment provider other than Shopify Payments, an extra transaction fee on each order. Apps, themes and domains are billed separately."],
+  ["What is the Shopify third-party transaction fee?", "On US plans listed at shopify.com/pricing it is 2% on Basic, 1% on Grow and 0.6% on Advanced, charged on orders paid through a provider other than Shopify Payments, Shop Pay or Shop Pay Installments."],
+  ["Where do I find my exact card rate?", "In your Shopify admin under Settings → Payments. Rates depend on your country, plan and card type, so use the rate shown there rather than a published example."],
+];
+---
+<BaseLayout
+  title="Shopify Fees Calculator: Plan, Card and Transaction Fees (Free) | Optifin"
+  description="Free Shopify fees calculator: monthly plan cost, card processing and third-party transaction fees, as a total and as a share of your sales."
+  breadcrumbs={[{ name: "Free tools", href: "/tools/" }, { name: "Shopify fees calculator", href: url }]}
+  schema={toolSchema("Shopify Fees Calculator", faq)}
+  headerTone="dark"
+>
+  <PageHero eyebrow="Free tool" title="Shopify fees calculator" lead="Add up what Shopify and your payment provider take each month, and what it is per order." />
+  <CalcLayout title="Shopify fees calculator">
+    <Fragment slot="inputs">
+      <label for="plan">Shopify plan <span class="hint">US monthly prices from shopify.com/pricing.</span>
+        <select id="plan">
+          {PLANS.map((p) => <option value={p.key} data-price={p.price} data-third={p.thirdParty} selected={p.key === "basic"}>{p.name}: ${p.price}/month, {p.thirdParty}% third-party fee</option>)}
+        </select>
+      </label>
+      <label for="provider">Payment provider
+        <select id="provider">
+          <option value="shopify" selected>Shopify Payments</option>
+          <option value="third">Another provider (third-party fee applies)</option>
+        </select>
+      </label>
+      <CalcField id="sales" label="Monthly sales" prefix="$" value="15000" />
+      <CalcField id="orders" label="Monthly orders" suffix="orders" value="240" step="1" />
+      <CalcField id="rate" label="Card rate" hint="Example value. Use the rate in Settings → Payments." suffix="%" value="2.9" step="0.05" />
+      <CalcField id="fixed" label="Fixed fee per payment" hint="Example value." prefix="$" value="0.30" />
+    </Fragment>
+    <Fragment slot="result">
+      <p class="label">Total Shopify and payment fees</p>
+      <p class="big" id="totalOut">—</p>
+      <dl>
+        <dt>Plan subscription</dt><dd id="planOut">—</dd>
+        <dt>Card processing</dt><dd id="cardOut">—</dd>
+        <dt>Third-party transaction fee</dt><dd id="thirdOut">—</dd>
+        <dt>Share of sales</dt><dd id="shareOut">—</dd>
+        <dt>Per order</dt><dd id="perOut">—</dd>
+      </dl>
+      <a class="btn btn--primary cta" href={installUrl("tool-fees")}>Include real fees in your profit</a>
+    </Fragment>
+
+    <h2>How the fees add up</h2>
+    <p><strong>Card processing = sales × card rate + orders × fixed fee.</strong> <strong>Third-party fee = sales × plan's third-party rate</strong>, only when you do not use Shopify Payments. Add the plan subscription for the monthly total.</p>
+    <p>Plan prices and third-party rates come from Shopify's US pricing page (monthly billing; yearly billing is cheaper). The card rate fields are an example: rates differ by country, plan and card type, and international cards or currency conversion can cost more.</p>
+    <h2>What this calculator leaves out</h2>
+    <p>App subscriptions, Shopify Plus pricing, chargebacks and taxes. <a href="/features/costs/">Optifin</a> records the actual payment fee on each order, or applies the rule you set, so fees are part of every profit figure.</p>
+    <h2>Questions</h2>
+    {faq.map(([q, a]) => (<><h3>{q}</h3><p>{a}</p></>))}
+  </CalcLayout>
+</BaseLayout>
+
+<script>
+  import { bind, num, set, money, pct } from "../../scripts/calc";
+  bind(() => {
+    const plan = (document.getElementById("plan") as HTMLSelectElement).selectedOptions[0];
+    const third = (document.getElementById("provider") as HTMLSelectElement).value === "third";
+    const sales = num("sales");
+    const orders = num("orders");
+    const planFee = Number(plan.dataset.price);
+    const card = sales * (num("rate") / 100) + orders * num("fixed");
+    const thirdFee = third ? sales * (Number(plan.dataset.third) / 100) : 0;
+    const total = planFee + card + thirdFee;
+    set("planOut", money(planFee));
+    set("cardOut", money(card));
+    set("thirdOut", third ? money(thirdFee) : "None with Shopify Payments");
+    set("totalOut", money(total));
+    set("shareOut", sales ? pct(total / sales, 2) : "—");
+    set("perOut", orders ? money(total / orders) : "—");
+  });
+</script>

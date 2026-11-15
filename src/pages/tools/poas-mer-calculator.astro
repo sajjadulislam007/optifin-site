@@ -1,0 +1,66 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import PageHero from "../../components/PageHero.astro";
+import CalcLayout from "../../components/CalcLayout.astro";
+import CalcField from "../../components/CalcField.astro";
+import { installUrl } from "../../data/site";
+import { toolSchema, toolUrl } from "../../data/tools";
+const url = toolUrl("poas-mer-calculator");
+const faq: [string, string][] = [
+  ["What is POAS?", "POAS, profit on ad spend, is the profit from ad-driven orders divided by ad spend. Above 1.0 the ads made money after product, shipping and fees; below 1.0 they lost money."],
+  ["What is MER?", "MER, marketing efficiency ratio, is total store revenue divided by total ad spend across every channel. It does not rely on any ad platform's attribution, so it is a useful cross-check on reported ROAS."],
+  ["Why can ROAS look good while POAS is below 1?", "ROAS counts revenue, not profit. A 3× ROAS on products with a 30% contribution margin returns only 0.9× in profit, so the ads lose money."],
+];
+---
+<BaseLayout
+  title="POAS and MER Calculator for Shopify Ads (Free) | Optifin"
+  description="Free POAS and MER calculator: compare profit on ad spend, blended marketing efficiency and ROAS to see whether your ads make money, not just revenue."
+  breadcrumbs={[{ name: "Free tools", href: "/tools/" }, { name: "POAS and MER calculator", href: url }]}
+  schema={toolSchema("POAS and MER Calculator", faq)}
+  headerTone="dark"
+>
+  <PageHero eyebrow="Free tool" title="POAS and MER calculator" lead="ROAS tells you revenue. POAS tells you profit. MER checks both against your whole store." />
+  <CalcLayout title="POAS and MER calculator">
+    <Fragment slot="inputs">
+      <CalcField id="spend" label="Total ad spend" hint="All channels, same period." prefix="$" value="5000" />
+      <CalcField id="store" label="Total store revenue" hint="Every order, from any source." prefix="$" value="32000" />
+      <CalcField id="adRev" label="Revenue the ad platforms report" prefix="$" value="16500" />
+      <CalcField id="adCosts" label="Product, shipping and fee costs of those orders" prefix="$" value="9900" />
+    </Fragment>
+    <Fragment slot="result">
+      <p class="label">POAS</p>
+      <p class="big" id="poasOut">—</p>
+      <dl>
+        <dt>Profit after ads on those orders</dt><dd id="profitOut">—</dd>
+        <dt>Reported ROAS</dt><dd id="roasOut">—</dd>
+        <dt>MER (blended)</dt><dd id="merOut">—</dd>
+        <dt>Verdict</dt><dd id="verdict">—</dd>
+      </dl>
+      <a class="btn btn--primary cta" href={installUrl("tool-poas")}>Track true profit free</a>
+    </Fragment>
+
+    <h2>Formulas</h2>
+    <p><strong>POAS = (ad revenue − costs of those orders) ÷ ad spend.</strong> <strong>ROAS = ad revenue ÷ ad spend.</strong> <strong>MER = total store revenue ÷ total ad spend.</strong> Profit after ads is ad revenue minus order costs minus ad spend.</p>
+    <h2>Example</h2>
+    <p>$5,000 of ads that platforms credit with $16,500 of revenue is a 3.30× ROAS. Those orders cost $9,900 to fulfil, leaving $6,600 of gross profit: a POAS of 1.32×, so the ads earned $1,600 after paying for themselves. Store revenue of $32,000 gives an MER of 6.40×.</p>
+    <h2>What this calculator leaves out</h2>
+    <p>Ad platforms often credit themselves with the same order, so reported revenue can be too high. MER avoids that but includes sales ads did not drive. Optifin's <a href="/integrations/">ad platform connections</a>, now in certification, will set ad spend against Shopify's own orders and costs.</p>
+    <h2>Questions</h2>
+    {faq.map(([q, a]) => (<><h3>{q}</h3><p>{a}</p></>))}
+  </CalcLayout>
+</BaseLayout>
+
+<script>
+  import { bind, num, set, money, times } from "../../scripts/calc";
+  bind(() => {
+    const spend = num("spend");
+    const adRev = num("adRev");
+    const gross = adRev - num("adCosts");
+    const poas = spend ? gross / spend : null;
+    set("poasOut", times(poas));
+    set("profitOut", money(gross - spend));
+    set("roasOut", spend ? times(adRev / spend) : "—");
+    set("merOut", spend ? times(num("store") / spend) : "—");
+    set("verdict", poas === null ? "—" : poas >= 1 ? "Ads are profitable" : "Ads lose money");
+  });
+</script>

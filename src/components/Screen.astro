@@ -1,0 +1,45 @@
+---
+// A real app screenshot in an admin-style frame. Images are captured at 2x
+// from the synthetic demo store (see plan/07-screenshots-plan.md).
+import { Picture } from "astro:assets";
+import type { ImageMetadata } from "astro";
+
+const shots = import.meta.glob<{ default: ImageMetadata }>("../assets/screens/*.png", { eager: true });
+interface Props {
+  name: string;
+  alt: string;
+  sizes?: string;
+  bare?: boolean;
+  class?: string;
+  eager?: boolean;
+  note?: boolean;
+}
+const { name, alt, sizes = "(max-width: 1200px) 100vw, 1200px", bare = false, class: cls = "", eager = false, note = false } = Astro.props;
+const entry = shots[`../assets/screens/${name}.png`];
+if (!entry) throw new Error(`Missing screenshot: ${name}`);
+const image = entry.default;
+const widths = [480, 800, 1200, 1600, 2400].filter((w) => w <= image.width);
+// Section crops (cards, charts) sit edge to edge; give them breathing room.
+const padded = name.startsWith("dashboard-") && !["dashboard-overview", "dashboard-mobile"].includes(name) && !bare;
+---
+<figure class={`shot ${cls}`}>
+  <div class:list={["screen", { "screen--bare": bare, "screen--pad": padded }]}>
+    <Picture
+      src={image}
+      alt={alt}
+      formats={["avif", "webp"]}
+      widths={widths}
+      sizes={sizes}
+      loading={eager ? "eager" : "lazy"}
+      fetchpriority={eager ? "high" : "auto"}
+      quality={78}
+    />
+  </div>
+  {note && <figcaption class="sample-note">Shown with sample data.</figcaption>}
+</figure>
+
+<style>
+  .shot { margin: 0; }
+  .shot :global(img) { width: 100%; height: auto; }
+  .shot :global(.screen--pad picture) { display: block; padding: clamp(12px, 2.4vw, 28px); }
+</style>

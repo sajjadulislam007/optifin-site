@@ -1,0 +1,27 @@
+---
+title: "Order profit"
+description: "See profit for every Shopify order in Optifin, filter by status or profitability, and open the full breakdown."
+sidebar:
+  order: 1
+---
+
+import { Image } from "astro:assets";
+import orders from "../../../../assets/screens/orders.png";
+
+
+<Image src={orders} alt="Order report with profitability for each order" widths={[800, 1200, 1600]} sizes="(max-width: 900px) 100vw, 46rem" />
+
+<p class="sample-note">Shown with sample data.</p>
+
+
+- Filter by **status** and **profitability** (profitable, losing order and more), or search by order number, product or SKU.
+- Each row shows revenue, refunds and whether the order made money.
+- Open an order to see the full breakdown: revenue, discounts, refunds, product costs, shipping, fees and the resulting profit.
+- **Export report** downloads the filtered list.
+
+## Related
+
+- [Products](/docs/orders-and-products/products/)
+- [Reconciliation](/docs/orders-and-products/reconciliation/)
+
+Still stuck? Email [support@optifin.app](mailto:support@optifin.app).

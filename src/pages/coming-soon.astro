@@ -1,0 +1,50 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import PageHero from "../components/PageHero.astro";
+import Icon from "../components/Icon.astro";
+import { COMING_SOON, SITE } from "../data/site";
+---
+<BaseLayout
+  title="Coming Soon: Optifin Roadmap"
+  description="What Optifin is building next: Meta Ads and Google Ads, more ad platforms, Slack, Google Sheets and more."
+  breadcrumbs={[{ name: "Coming soon", href: "/coming-soon/" }]}
+  headerTone="dark"
+>
+  <PageHero eyebrow="Roadmap" title="What we are building next." lead="We ship features once we can prove their numbers are right. None of these are available yet; dates are announced when they are ready." />
+
+  <section class="section">
+    <div class="container">
+      <ul class="grid" data-reveal-group>
+        {COMING_SOON.map((c, i) => (
+          <li class:list={["item card", { big: i < 2 }]}>
+            <div class="top">
+              <span class="ico"><Icon name={c.icon} size={24} /></span>
+              <span class="badge badge--soon">Coming soon</span>
+            </div>
+            <h2 class="h3">{c.title}</h2>
+            <p>{c.body}</p>
+          </li>
+        ))}
+      </ul>
+      <div class="notify card" data-reveal>
+        <div>
+          <h2 class="h3">Want to hear when they ship?</h2>
+          <p>Email us and we will let you know. We only use your address for this.</p>
+        </div>
+        <a class="btn btn--primary" href={`mailto:${SITE.supportEmail}?subject=Notify%20me%20about%20new%20Optifin%20features`}>Notify me</a>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .grid { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; }
+  .item { padding: 28px; display: grid; gap: 12px; align-content: start; }
+  .item.big { grid-column: span 1; background: linear-gradient(160deg, #eef6ff, #fff 60%); }
+  .item p { color: var(--ink-soft); }
+  .top { display: flex; justify-content: space-between; align-items: center; }
+  .ico { width: 46px; height: 46px; border-radius: 14px; display: grid; place-items: center; background: var(--navy-900); color: var(--brand-400); }
+  .notify { margin-top: 48px; padding: 32px; display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap; background: var(--surface-2); }
+  .notify p { color: var(--ink-soft); margin-top: 6px; }
+  @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+</style>

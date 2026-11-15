@@ -1,0 +1,41 @@
+---
+import ProseLayout from "../layouts/ProseLayout.astro";
+import { launched } from "../data/site";
+const ads = launched(["metaAds", "googleAds"]);
+const delivery = ["Profit digest by email", launched(["slack"]) && "Slack", "scheduled reports", launched(["googleSheets"]) && "Google Sheets"].filter(Boolean).join(", ");
+---
+<ProseLayout
+  title="Changelog | Optifin"
+  heading="Changelog"
+  eyebrow="Product"
+  description="What has changed in Optifin, release by release."
+  lead="What shipped, and when."
+  path="/changelog/"
+>
+  <h2>Version 1 (upcoming)</h2>
+  <p>The first public release of Optifin on the Shopify App Store.</p>
+  <ul>
+    <li>Profit dashboard with coverage on every number, executive briefing, performance trend, saved views, custom metrics and targets.</li>
+    <li>Costs: effective-dated product costs, shipping, payment fees and custom costs.</li>
+    <li>Order and product profitability and reconciliation with Shopify.</li>
+    <li>Customer lifetime value, cohorts and segments.</li>
+    <li>Discount and returns profitability.</li>
+    <li>Profit and Loss report and custom reports.</li>
+    <li>Profit simulator and profit planning.</li>
+    <li>Action Center and Data health page.</li>
+  </ul>
+  <h3>Added before launch (November 2026)</h3>
+  <ul>
+    <li>Today so far: today against yesterday at the same time, at the top of the dashboard.</li>
+    <li>Click any number to open the orders or products behind it.</li>
+    {ads && <li>Meta Ads and Google Ads, with a daily check that all ad spend was imported.</li>}
+    <li>{delivery} and smart alerts. Critical problems are sent straight away instead of waiting for the next digest.</li>
+    <li>Data health as one checklist: what is complete and what to fix next.</li>
+    <li>Profit with missing costs is shown as a likely range, never as a final figure.</li>
+    <li>A check for product costs that look wrong, such as a cost higher than the price.</li>
+    <li>When a past period's figures change (a late refund or an edited cost), the dashboard and Profit and Loss explain what changed.</li>
+    <li>Gift card sales are kept out of revenue and profit until the card is spent.</li>
+    <li>More accurate numbers: VAT in tax-inclusive prices, split shipments, and ratios with nothing to divide by shown as unavailable instead of 0.</li>
+  </ul>
+  <p>See what is next on the <a href="/coming-soon/">roadmap</a>.</p>
+</ProseLayout>

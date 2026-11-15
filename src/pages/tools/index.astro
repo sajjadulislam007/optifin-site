@@ -1,0 +1,48 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import PageHero from "../../components/PageHero.astro";
+import Icon from "../../components/Icon.astro";
+import { TOOLS, toolUrl } from "../../data/tools";
+const groups = ["Profit", "Pricing", "Advertising", "Customers"] as const;
+const schema = [{
+  "@context": "https://schema.org", "@type": "ItemList", name: "Free Shopify profit calculators",
+  itemListElement: TOOLS.map((t, i) => ({ "@type": "ListItem", position: i + 1, name: t.name, url: `https://optifin.app${toolUrl(t.slug)}` })),
+}];
+---
+<BaseLayout
+  title="Free Shopify Profit Calculators | Optifin"
+  description="Free Shopify calculators for profit margin, contribution margin, fees, pricing, discounts, break-even ROAS, POAS, MER and LTV:CAC. No sign-up, formulas shown."
+  breadcrumbs={[{ name: "Free tools", href: "/tools/" }]}
+  schema={schema}
+  headerTone="dark"
+>
+  <PageHero eyebrow="Free tools" title="Shopify profit calculators." lead="Eight free calculators for the numbers that decide whether your store makes money. No sign-up, and every formula is on the page." />
+  <section class="section">
+    <div class="container groups">
+      {groups.map((g) => (
+        <div class="group" data-reveal-group>
+          <h2 class="eyebrow">{g}</h2>
+          <div class="grid">
+            {TOOLS.filter((t) => t.group === g).map((t) => (
+              <a class="card tool" href={toolUrl(t.slug)}>
+                <h3 class="h3">{t.name}</h3>
+                <p>{t.summary}</p>
+                <span class="link-arrow">Open <Icon name="arrow" size={16} /></span>
+              </a>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .groups { display: grid; gap: 56px; }
+  .group { display: grid; gap: 20px; }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .tool { padding: 28px; display: grid; gap: 12px; align-content: start; text-decoration: none; transition: transform 0.3s, box-shadow 0.3s; }
+  .tool:hover { transform: translateY(-4px); box-shadow: var(--shadow); }
+  .tool p { color: var(--ink-soft); }
+  @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+</style>

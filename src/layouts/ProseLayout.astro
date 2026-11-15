@@ -1,0 +1,19 @@
+---
+import BaseLayout from "./BaseLayout.astro";
+import PageHero from "../components/PageHero.astro";
+interface Props { title: string; heading: string; description: string; lead?: string; eyebrow?: string; updated?: string; path: string }
+const { title, heading, description, lead, eyebrow, updated, path } = Astro.props;
+---
+<BaseLayout title={title} description={description} breadcrumbs={[{ name: heading, href: path }]} headerTone="dark">
+  <PageHero eyebrow={eyebrow} title={heading} lead={lead} />
+  <section class="section">
+    <div class="container">
+      {updated && <p class="updated">Last updated: {updated}</p>}
+      <div class="prose"><slot /></div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .updated { color: var(--ink-muted); font-size: 15px; margin-bottom: 28px; }
+</style>

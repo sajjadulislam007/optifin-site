@@ -1,0 +1,72 @@
+---
+import Logo from "./Logo.astro";
+import { FEATURES, SITE, installUrl } from "../data/site";
+const year = new Date().getFullYear();
+---
+<footer class="footer">
+  <div class="container">
+    <div class="cta-strip">
+      <div>
+        <h2 class="h2">Know your real profit <span class="gradient-text">today.</span></h2>
+        <p class="lead">Install from the Shopify App Store. Free Starter plan, no separate login.</p>
+      </div>
+      <a class="btn btn--primary" href={installUrl("footer")}>Install on Shopify</a>
+    </div>
+    <div class="grid">
+      <div class="about">
+        <Logo tone="dark" size={30} />
+        <p>Shopify profit analytics that shows how complete every number is.</p>
+        <a href={`mailto:${SITE.supportEmail}`}>{SITE.supportEmail}</a>
+      </div>
+      <nav aria-label="Product">
+        <h3>Product</h3>
+        <a href="/features/">All features</a>
+        {FEATURES.slice(0, 5).map((f) => <a href={`/features/${f.slug}/`}>{f.name}</a>)}
+        <a href="/pricing/">Pricing</a>
+        <a href="/coming-soon/">Coming soon</a>
+      </nav>
+      <nav aria-label="Resources">
+        <h3>Resources</h3>
+        <a href="/docs/">Documentation</a>
+        <a href="/guides/">Guides</a>
+        <a href="/tools/">Free calculators</a>
+        <a href="/integrations/">Integrations</a>
+        <a href="/changelog/">Changelog</a>
+      </nav>
+      <nav aria-label="Company">
+        <h3>Company</h3>
+        <a href="/security/">Security and data</a>
+        <a href="/privacy/">Privacy policy</a>
+        <a href="/terms/">Terms of service</a>
+        <a href="/support/">Support</a>
+      </nav>
+    </div>
+    <div class="legal">
+      <p>© {year} Optifin. Shopify is a trademark of Shopify Inc.; Optifin is an independent app.</p>
+      <p>App screenshots are shown with sample data.</p>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .footer { background: var(--navy-950); color: #aab6c8; padding-block: 96px 40px; position: relative; overflow: hidden; }
+  .footer::before {
+    content: ""; position: absolute; inset: -40% -10% auto auto; width: 70vw; height: 70vw; max-width: 900px; max-height: 900px;
+    background: radial-gradient(circle, rgb(37 99 235 / 0.22), transparent 60%); pointer-events: none;
+  }
+  .cta-strip {
+    position: relative; display: flex; align-items: flex-end; justify-content: space-between; gap: 32px; flex-wrap: wrap;
+    padding-bottom: 72px; margin-bottom: 64px; border-bottom: 1px solid rgb(255 255 255 / 0.08);
+  }
+  .cta-strip h2 { color: #fff; max-width: 14ch; }
+  .cta-strip .lead { margin-top: 16px; color: #aab6c8; }
+  .grid { position: relative; display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 40px; }
+  .about p { margin: 18px 0 12px; max-width: 30ch; }
+  .about a { color: var(--brand-400); text-decoration: none; }
+  nav { display: grid; align-content: start; gap: 10px; }
+  h3 { font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase; color: #fff; margin-bottom: 6px; font-family: var(--font-display); }
+  nav a { color: #aab6c8; text-decoration: none; font-size: 15px; }
+  nav a:hover { color: #fff; }
+  .legal { position: relative; display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-top: 64px; padding-top: 28px; border-top: 1px solid rgb(255 255 255 / 0.08); font-size: 13px; color: #74839a; }
+  @media (max-width: 860px) { .grid { grid-template-columns: 1fr 1fr; } .about { grid-column: 1 / -1; } }
+</style>

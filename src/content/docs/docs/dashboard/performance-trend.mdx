@@ -1,0 +1,28 @@
+---
+title: "Performance trend"
+description: "Chart up to four Optifin metrics over time, daily, weekly or monthly, with partial data clearly marked."
+sidebar:
+  order: 5
+---
+
+import { Image } from "astro:assets";
+import dashboardTrend from "../../../../assets/screens/dashboard-trend.png";
+
+
+<Image src={dashboardTrend} alt="Performance trend chart with revenue and net profit" widths={[800, 1200, 1600]} sizes="(max-width: 900px) 100vw, 46rem" />
+
+<p class="sample-note">Shown with sample data.</p>
+
+
+- Select **Metrics** to choose up to four metrics, or use **Add to trend** from a card's menu.
+- Switch between **Daily**, **Weekly** and **Monthly**.
+- Hover or tap the chart to see exact values for a date.
+- Metrics in different units (money, percentages, counts) are drawn in their own bands so they are never visually compared on one scale.
+- Partial or estimated values are labelled, and comparison lines are only drawn when the comparison period is complete.
+
+## Related
+
+- [Dashboard overview](/docs/dashboard/overview/)
+- [Coverage notes](/docs/numbers/coverage-and-badges/)
+
+Still stuck? Email [support@optifin.app](mailto:support@optifin.app).

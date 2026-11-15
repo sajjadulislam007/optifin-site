@@ -1,0 +1,67 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import PageHero from "../../components/PageHero.astro";
+import Screen from "../../components/Screen.astro";
+import Icon from "../../components/Icon.astro";
+import { ALSO_INCLUDED, FEATURES, installUrl } from "../../data/site";
+---
+<BaseLayout
+  title="Features: Shopify Profit Analytics | Optifin"
+  description="Every Optifin feature: profit dashboard, costs, order and product profit, customer LTV, Profit and Loss reports, Action Center and the profit simulator."
+  breadcrumbs={[{ name: "Features", href: "/features/" }]}
+  headerTone="dark"
+>
+  <PageHero eyebrow="Features" title="Everything you need to know your real profit." lead="Seven workspaces, one calculation engine, and coverage on every number.">
+    <a class="btn btn--primary" href={installUrl("features")}>Install on Shopify</a>
+  </PageHero>
+
+  <section class="section">
+    <div class="container list">
+      {FEATURES.map((f, i) => (
+        <article class:list={["row", { flip: i % 2 === 1 }]} data-reveal>
+          <div class="copy">
+            <p class="eyebrow">{f.eyebrow}</p>
+            <h2 class="h2">{f.title}</h2>
+            <p class="lead">{f.summary}</p>
+            <ul>{f.points.slice(0, 3).map((p) => <li><Icon name="check" size={18} /> <span><strong>{p.title}.</strong>{" "}{p.body}</span></li>)}</ul>
+            <a class="link-arrow" href={`/features/${f.slug}/`}>Explore {f.name.toLowerCase()} <Icon name="arrow" size={16} /></a>
+          </div>
+          <div class="media"><Screen name={f.screen} alt={`Optifin ${f.name}`} sizes="(max-width: 900px) 100vw, 640px" /></div>
+        </article>
+      ))}
+    </div>
+  </section>
+
+  <section class="section section--soft">
+    <div class="container">
+      <div class="section-head" data-reveal>
+        <p class="eyebrow">Also included</p>
+        <h2 class="h2">And the details that make it complete.</h2>
+      </div>
+      <ul class="also" data-reveal-group>
+        {ALSO_INCLUDED.map((x) => <li class="card"><Icon name="check" size={18} /> {x}</li>)}
+      </ul>
+      <p class="more"><a class="link-arrow" href="/coming-soon/">See what is coming next <Icon name="arrow" size={16} /></a></p>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .list { display: grid; gap: clamp(80px, 10vw, 140px); }
+  .row { display: grid; grid-template-columns: 0.9fr 1.1fr; gap: clamp(32px, 5vw, 80px); align-items: center; }
+  .row.flip .copy { order: 2; }
+  .copy { display: grid; gap: 18px; }
+  .copy ul { list-style: none; padding: 0; margin: 4px 0 6px; display: grid; gap: 12px; color: var(--ink-soft); }
+  .copy li { display: flex; gap: 10px; }
+  .copy li strong { color: var(--ink); }
+  .copy :global(svg) { color: var(--profit); flex: none; margin-top: 4px; }
+  .media :global(.screen) { max-height: 520px; }
+  .media :global(.screen img) { object-fit: cover; object-position: top left; max-height: 486px; }
+  .section-head { display: grid; gap: 16px; margin-bottom: 48px; }
+  .also { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .also li { padding: 20px; display: flex; gap: 10px; font-weight: 500; }
+  .also :global(svg) { color: var(--brand-600); flex: none; margin-top: 3px; }
+  .more { margin-top: 36px; }
+  @media (max-width: 900px) { .row { grid-template-columns: 1fr; } .row.flip .copy { order: 0; } .also { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 560px) { .also { grid-template-columns: 1fr; } }
+</style>

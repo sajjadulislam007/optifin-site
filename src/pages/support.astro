@@ -1,0 +1,35 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import PageHero from "../components/PageHero.astro";
+import Icon from "../components/Icon.astro";
+import { SITE } from "../data/site";
+const items = [
+  { icon: "doc", title: "Documentation", body: "Step-by-step guides for every part of Optifin.", href: "/docs/", cta: "Read the docs" },
+  { icon: "mail", title: "Email support", body: "Write to us with your store name and what you see. We reply on business days.", href: `mailto:${SITE.supportEmail}`, cta: SITE.supportEmail },
+  { icon: "refresh", title: "Troubleshooting", body: "Numbers look wrong, sync is slow or a comparison is held back.", href: "/docs/account/troubleshooting/", cta: "Fix common issues" },
+];
+---
+<BaseLayout title="Support | Optifin" description="Get help with Optifin: documentation, troubleshooting and email support." breadcrumbs={[{ name: "Support", href: "/support/" }]} headerTone="dark">
+  <PageHero eyebrow="Support" title="We are here to help." lead="Most answers are in the docs. For anything else, email us." />
+  <section class="section">
+    <div class="container grid" data-reveal-group>
+      {items.map((i) => (
+        <a class="card item" href={i.href}>
+          <Icon name={i.icon} size={28} />
+          <h2 class="h3">{i.title}</h2>
+          <p>{i.body}</p>
+          <span class="link-arrow">{i.cta} <Icon name="arrow" size={16} /></span>
+        </a>
+      ))}
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .item { padding: 30px; display: grid; gap: 12px; align-content: start; text-decoration: none; transition: transform 0.3s, box-shadow 0.3s; }
+  .item:hover { transform: translateY(-4px); box-shadow: var(--shadow); }
+  .item :global(svg:first-child) { color: var(--brand-600); }
+  .item p { color: var(--ink-soft); }
+  @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+</style>

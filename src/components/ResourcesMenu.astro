@@ -1,0 +1,75 @@
+---
+// Resources mega menu: docs, guides, free calculators, integrations and help,
+// on the shared MegaMenu shell. variant "mobile" renders a disclosure for the
+// mobile menu with the same links.
+import { getCollection } from "astro:content";
+import Icon from "./Icon.astro";
+import MegaMenu from "./nav/MegaMenu.astro";
+import { TOOLS, toolUrl } from "../data/tools";
+import { INTEGRATIONS, STATUS_LABEL, integrationUrl } from "../data/integrations";
+interface Props { variant: "desktop" | "mobile"; current?: boolean }
+const { variant, current = false } = Astro.props;
+const guides = (await getCollection("guides"))
+  .sort((a, b) => b.data.published.getTime() - a.data.published.getTime())
+  .slice(0, 3);
+const learn = [
+  { href: "/docs/", label: "Documentation", note: "Set up and use every part of Optifin", icon: "doc" },
+  { href: "/docs/getting-started/install/", label: "Getting started", note: "Install to trusted profit, step by step", icon: "sparkle" },
+  { href: "/guides/", label: "Profit guides", note: "True profit, COGS, ROAS and POAS explained", icon: "chart" },
+  { href: "/changelog/", label: "Changelog", note: "What is new in Optifin", icon: "refresh" },
+];
+const help = [
+  { href: "/support/", label: "Support" },
+  { href: "/docs/account/troubleshooting/", label: "Troubleshooting" },
+  { href: "/security/", label: "Security and data" },
+];
+// The column is titled "Free calculators", so drop the repeated word.
+const short = (name: string) => name.replace(/ calculator$/i, "");
+---
+{variant === "desktop" ? (
+  <MegaMenu id="mm-resources" label="Resources" current={current} width={1040}>
+    <div class="mm-cols resources">
+      <section class="mm-col" aria-labelledby="mm-learn">
+        <h2 id="mm-learn" class="mm-title">Learn</h2>
+        <ul class="mm-list">
+          {learn.map((l) => (
+            <li><a class="mm-item" href={l.href}><span class="mm-ico"><Icon name={l.icon} size={18} /></span><span><strong>{l.label}</strong><small>{l.note}</small></span></a></li>
+          ))}
+        </ul>
+        <h3 class="mm-title sub">Latest guides</h3>
+        <ul class="mm-list">{guides.map((g) => <li><a class="mm-link" href={`/guides/${g.id}/`}>{g.data.title}</a></li>)}</ul>
+      </section>
+      <section class="mm-col" aria-labelledby="mm-tools">
+        <h2 id="mm-tools" class="mm-title">Free calculators</h2>
+        <ul class="mm-list">{TOOLS.map((t) => <li><a class="mm-link" href={toolUrl(t.slug)}>{short(t.name)}</a></li>)}</ul>
+        <a class="mm-more" href="/tools/">All calculators <Icon name="arrow" size={14} /></a>
+      </section>
+      <section class="mm-col" aria-labelledby="mm-int">
+        <h2 id="mm-int" class="mm-title">Integrations</h2>
+        <ul class="mm-list">
+          {INTEGRATIONS.map((i) => (
+            <li><a class="mm-link" href={integrationUrl(i.slug)}>{i.name}{i.status !== "live" && <span class="mm-tag">{STATUS_LABEL[i.status]}</span>}</a></li>
+          ))}
+        </ul>
+        <a class="mm-more" href="/integrations/">All integrations <Icon name="arrow" size={14} /></a>
+        <h3 class="mm-title sub">Help</h3>
+        <ul class="mm-list">{help.map((h) => <li><a class="mm-link" href={h.href}>{h.label}</a></li>)}</ul>
+      </section>
+    </div>
+  </MegaMenu>
+) : (
+  <details class="m-menu">
+    <summary>Resources <svg viewBox="0 0 12 12" width="14" height="14" aria-hidden="true"><path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" /></svg></summary>
+    <div class="m-groups">
+      <div><p>Learn</p>{learn.map((l) => <a href={l.href}>{l.label}</a>)}</div>
+      <div><p>Free calculators</p>{TOOLS.map((t) => <a href={toolUrl(t.slug)}>{short(t.name)}</a>)}<a href="/tools/">All calculators</a></div>
+      <div><p>Integrations</p>{INTEGRATIONS.map((i) => <a href={integrationUrl(i.slug)}>{i.name}</a>)}</div>
+      <div><p>Help</p>{help.map((h) => <a href={h.href}>{h.label}</a>)}</div>
+    </div>
+  </details>
+)}
+
+<style>
+  .resources { grid-template-columns: 1.35fr 1fr 1fr; }
+  .sub { margin-top: 14px; }
+</style>

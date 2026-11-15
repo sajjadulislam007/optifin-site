@@ -1,0 +1,23 @@
+---
+// One calculator input: label, optional hint, and a number field with a
+// prefix ("$") or suffix ("%", "×", "months").
+interface Props {
+  id: string;
+  label: string;
+  hint?: string;
+  value: number | string;
+  prefix?: string;
+  suffix?: string;
+  step?: string;
+  min?: string;
+}
+const { id, label, hint, value, prefix, suffix, step = "0.01", min = "0" } = Astro.props;
+---
+<label for={id}>
+  {label}{hint && <span class="hint">{hint}</span>}
+  <div class="field">
+    {prefix && <span>{prefix}</span>}
+    <input class:list={[{ pct: !prefix }]} type="number" inputmode="decimal" min={min} step={step} id={id} value={value} />
+    {suffix && <span class="suffix">{suffix}</span>}
+  </div>
+</label>

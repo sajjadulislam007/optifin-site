@@ -1,0 +1,69 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import PageHero from "../../components/PageHero.astro";
+import CalcLayout from "../../components/CalcLayout.astro";
+import CalcField from "../../components/CalcField.astro";
+import { installUrl } from "../../data/site";
+import { toolSchema, toolUrl } from "../../data/tools";
+const url = toolUrl("ltv-cac-calculator");
+const faq: [string, string][] = [
+  ["How is customer lifetime value calculated here?", "As profit, not revenue: average order value × contribution margin × orders per year × years a customer stays. Revenue-based LTV makes every customer look more valuable than they are."],
+  ["What is a good LTV to CAC ratio?", "A ratio of 3:1 is a common rule of thumb, but cash matters too. A 3:1 ratio that takes two years to pay back can strain a small store; the payback period shows that."],
+  ["What is CAC payback?", "The number of months of a customer's contribution needed to earn back what it cost to acquire them. Shorter is safer, because the money comes back before it is needed again."],
+];
+---
+<BaseLayout
+  title="LTV to CAC and Payback Calculator for Shopify (Free) | Optifin"
+  description="Free LTV:CAC calculator with CAC payback: profit-based customer lifetime value, acquisition cost and the months it takes to earn it back."
+  breadcrumbs={[{ name: "Free tools", href: "/tools/" }, { name: "LTV to CAC and payback calculator", href: url }]}
+  schema={toolSchema("LTV to CAC and Payback Calculator", faq)}
+  headerTone="dark"
+>
+  <PageHero eyebrow="Free tool" title="LTV to CAC and payback calculator" lead="How much a customer is worth in profit, what you pay to win one, and how many months it takes to get that money back." />
+  <CalcLayout title="LTV to CAC and payback calculator">
+    <Fragment slot="inputs">
+      <CalcField id="aov" label="Average order value" prefix="$" value="62" />
+      <CalcField id="cm" label="Contribution margin before ads" hint="Use the contribution margin calculator if unsure." suffix="%" value="45" step="0.5" />
+      <CalcField id="freq" label="Orders per customer per year" suffix="orders" value="2.2" step="0.1" />
+      <CalcField id="life" label="Years a customer keeps buying" suffix="years" value="2" step="0.5" />
+      <CalcField id="mkt" label="Acquisition spend in a period" prefix="$" value="6000" />
+      <CalcField id="newc" label="New customers in that period" suffix="customers" value="150" step="1" />
+    </Fragment>
+    <Fragment slot="result">
+      <p class="label">LTV to CAC</p>
+      <p class="big" id="ratioOut">—</p>
+      <dl>
+        <dt>Lifetime value (profit)</dt><dd id="ltvOut">—</dd>
+        <dt>Customer acquisition cost</dt><dd id="cacOut">—</dd>
+        <dt>CAC payback</dt><dd id="payOut">—</dd>
+        <dt>Most you can pay per customer at 3:1</dt><dd id="maxOut">—</dd>
+      </dl>
+      <a class="btn btn--primary cta" href={installUrl("tool-ltv")}>See LTV by cohort for your store</a>
+    </Fragment>
+
+    <h2>Formulas</h2>
+    <p><strong>LTV = AOV × contribution margin × orders per year × years.</strong> <strong>CAC = acquisition spend ÷ new customers.</strong> <strong>Payback (months) = CAC ÷ (AOV × contribution margin × orders per year ÷ 12).</strong></p>
+    <h2>Example</h2>
+    <p>A $62 order at a 45% margin contributes $27.90. At 2.2 orders a year for 2 years, a customer is worth $122.76 in profit. $6,000 to win 150 customers is a $40 CAC, a 3.07:1 ratio, paid back in about 7.8 months.</p>
+    <h2>What this calculator leaves out</h2>
+    <p>Real customers do not all buy at the same rate, and early cohorts behave differently from recent ones. <a href="/features/customers/">Optifin's customer value view</a> measures repeat purchase and value by cohort from your orders.</p>
+    <h2>Questions</h2>
+    {faq.map(([q, a]) => (<><h3>{q}</h3><p>{a}</p></>))}
+  </CalcLayout>
+</BaseLayout>
+
+<script>
+  import { bind, num, set, money } from "../../scripts/calc";
+  bind(() => {
+    const perOrder = num("aov") * (Math.min(num("cm"), 100) / 100);
+    const perYear = perOrder * num("freq");
+    const ltv = perYear * num("life");
+    const newc = num("newc");
+    const cac = newc ? num("mkt") / newc : null;
+    set("ltvOut", money(ltv));
+    set("cacOut", money(cac));
+    set("ratioOut", cac ? `${(ltv / cac).toFixed(2)} : 1` : "—");
+    set("payOut", cac !== null && perYear > 0 ? `${(cac / (perYear / 12)).toFixed(1)} months` : "—");
+    set("maxOut", money(ltv / 3));
+  });
+</script>
