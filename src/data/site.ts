@@ -48,7 +48,8 @@ export type Feature = {
 //
 // Production state 2026-11-15 (app.optifin.app first deploy): Meta Ads and
 // Google Ads wait for platform approval (the app keeps them off until
-// certified); Slack and Google Sheets wait for their production OAuth apps.
+// certified); Google Sheets waits for its production OAuth app. Slack was
+// removed from V1 (owner decision 2026-11-16: no merchant demand).
 export const LAUNCH = {
   metaAds: false,
   googleAds: false,
@@ -57,7 +58,6 @@ export const LAUNCH = {
   surveys: false,
   alerts: true,
   reportDelivery: true, // profit digest email and scheduled email reports
-  slack: false, // Slack digest
   googleSheets: false, // Google Sheets sync
 } as const;
 export type LaunchKey = keyof typeof LAUNCH;
@@ -168,20 +168,19 @@ const ALL_FEATURES: Feature[] = [
   {
     slug: "alerts-and-delivery",
     name: "Alerts and delivery",
-    eyebrow: launched(["slack"]) ? "Alerts, email & Slack" : "Alerts & email reports",
+    eyebrow: "Alerts & email reports",
     title: "Your numbers come to you.",
     summary:
       "A daily profit email, scheduled reports and alerts when profit, costs or data move unusually, all with the same coverage notes as the app.",
     screen: "alerts",
     points: [
       { title: "Profit digest", body: "Revenue, contribution profit, net profit and margin with the change from the last period. Weekly or monthly on Starter, daily on Growth and Scale." },
-      ...when(["slack"], [{ title: "Slack", body: "Post the same digest to a Slack channel you choose. Optifin can only post to that channel. Growth and Scale." }]),
       { title: "Scheduled reports", body: "Profit and Loss, saved custom reports and dashboards delivered as CSV, Excel or PDF on your schedule." },
       ...when(["googleSheets"], [{ title: "Google Sheets", body: "Keep a saved report in sync with a spreadsheet you choose. Scale plan." }]),
       { title: "Smart alerts", body: "Net profit drops, fee and shipping spikes, unprofitable promotions and more, only when the change is material and unusual for your store." },
       { title: "Protection that is always on", body: "Missing product costs, sync failures and missing exchange rates are flagged on every plan, so incomplete profit is never presented as final." },
     ],
-    docs: "/docs/delivery/email-and-slack/",
+    docs: "/docs/delivery/profit-digest/",
     seoTitle: "Shopify Profit Alerts and Daily Profit Email | Optifin",
     seoDescription:
       "Get a daily Shopify profit email, scheduled reports and smart alerts when profit or costs move unusually, with coverage notes on every number.",
@@ -259,7 +258,6 @@ export const ALSO_INCLUDED = [
 // Items leave Coming soon automatically when their launch keys are live.
 const ROADMAP: { title: string; body: string; icon: string; launch?: LaunchKey[] }[] = [
   { title: "Daily profit email", body: "Yesterday's profit, sales and biggest change, every morning.", icon: "mail", launch: ["reportDelivery"] },
-  { title: "Slack digest", body: "The same profit digest posted to a Slack channel you choose.", icon: "mail", launch: ["slack"] },
   { title: "Smart alerts", body: "Notifications when profit, refunds or costs move unusually.", icon: "bell", launch: ["alerts"] },
   { title: "Scheduled reports", body: "Reports delivered by email on a schedule.", icon: "calendar", launch: ["reportDelivery"] },
   { title: "Google Sheets sync", body: "A saved report kept in sync with a spreadsheet you choose.", icon: "calendar", launch: ["googleSheets"] },
@@ -300,7 +298,6 @@ export const PLANS = [
       "CSV, Excel and PDF export",
       "10 saved views per report and 25 custom metrics",
       ...(launched(["reportDelivery"]) ? ["Daily profit email", "Secure report links"] : []),
-      ...(launched(["slack"]) ? ["Slack digest"] : []),
       ...((launched(["metaAds"]) || launched(["googleAds"])) ? ["Meta Ads and Google Ads together"] : []),
       ...(launched(["alerts"]) ? ["Profit, fee and promotion alerts with your thresholds"] : []),
     ],

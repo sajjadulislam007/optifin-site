@@ -27,5 +27,5 @@ Keeping a report in sync with a Google Sheet is [coming soon](/docs/account/comi
 
 ## Related
 
-- [Profit digest by email](/docs/delivery/email-and-slack/)
+- [Profit digest by email](/docs/delivery/profit-digest/)
 - [Report templates](/docs/reports/custom-reports/)

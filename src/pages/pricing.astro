@@ -21,9 +21,6 @@ const rows: [string, string, string, string][] = [
     ["Scheduled reports", "1 schedule", "10 schedules", "25 schedules"],
     ["Secure report links", "—", "10 active", "50 active"],
   ] as [string, string, string, string][]) : []),
-  ...(launched(["slack"]) ? ([
-    ["Slack digest", "—", "✓", "✓"],
-  ] as [string, string, string, string][]) : []),
   ...(launched(["googleSheets"]) ? ([
     ["Google Sheets sync", "—", "—", "25 destinations"],
   ] as [string, string, string, string][]) : []),

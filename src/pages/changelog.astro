@@ -2,7 +2,7 @@
 import ProseLayout from "../layouts/ProseLayout.astro";
 import { launched } from "../data/site";
 const ads = launched(["metaAds", "googleAds"]);
-const delivery = ["Profit digest by email", launched(["slack"]) && "Slack", "scheduled reports", launched(["googleSheets"]) && "Google Sheets"].filter(Boolean).join(", ");
+const delivery = ["Profit digest by email", "scheduled reports", launched(["googleSheets"]) && "Google Sheets"].filter(Boolean).join(", ");
 ---
 <ProseLayout
   title="Changelog | Optifin"

@@ -2,7 +2,7 @@
 // solves, and for whom). Links point at existing feature pages, tools and
 // docs, so the menus never promise a page that does not exist. Launch-gated
 // features drop out automatically through FEATURES.
-import { FEATURES, launched } from "./site";
+import { FEATURES } from "./site";
 
 // One-line descriptions and icons for the Product menu, keyed by feature slug.
 const PRODUCT_META: Record<string, { icon: string; blurb: string }> = {
@@ -11,7 +11,7 @@ const PRODUCT_META: Record<string, { icon: string; blurb: string }> = {
   "orders-and-products": { icon: "box", blurb: "Profit for every order and product" },
   customers: { icon: "users", blurb: "Lifetime value, cohorts and segments" },
   marketing: { icon: "target", blurb: "Meta and Google Ads judged on profit" },
-  "alerts-and-delivery": { icon: "bell", blurb: launched(["slack"]) ? "Daily email, Slack and alerts" : "Daily profit email and alerts" },
+  "alerts-and-delivery": { icon: "bell", blurb: "Daily profit email and alerts" },
   reports: { icon: "doc", blurb: "Profit and Loss and custom reports" },
   "action-center": { icon: "shield", blurb: "Problems turned into a to-do list" },
   simulator: { icon: "sliders", blurb: "Test prices, costs and ad budgets" },

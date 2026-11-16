@@ -36,4 +36,4 @@ On days when nothing needs you, the alert digest isn't sent at all.
 ## Related
 
 - [Action Center cases](/docs/action-center/cases/)
-- [Profit digest by email](/docs/delivery/email-and-slack/)
+- [Profit digest by email](/docs/delivery/profit-digest/)

@@ -15,10 +15,6 @@ The profit digest is built for your phone: your **net profit** in large type wit
 
 Use **Send now** to see one straight away.
 
-## Slack
-
-Posting the digest to Slack is [coming soon](/docs/account/coming-soon/).
-
 ## Incomplete data
 
 The first line of every digest says whether the period's data is complete: all orders, product costs, shipping, payment fees and ad spend, or exactly what is still missing.
