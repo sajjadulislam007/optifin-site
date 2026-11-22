@@ -1,0 +1,25 @@
+# The website's addresses for the server's main Caddy (installed to
+# /opt/optifin/sites by ops/install.sh). HTTPS certificates are automatic once each
+# name's DNS A record points to the server. The live names need their DNS record
+# switched to the server before they work; until then only dev.optifin.app does.
+
+optifin.app {
+	reverse_proxy optifin-site-live:80
+	log {
+		output stdout
+		format console
+	}
+}
+
+www.optifin.app {
+	redir https://optifin.app{uri} permanent
+}
+
+dev.optifin.app {
+	header X-Robots-Tag "noindex, nofollow"
+	reverse_proxy optifin-site-dev:80
+	log {
+		output stdout
+		format console
+	}
+}
