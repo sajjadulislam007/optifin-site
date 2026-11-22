@@ -6,7 +6,7 @@ import { TOOLS, toolUrl } from "../../data/tools";
 const groups = ["Profit", "Pricing", "Advertising", "Customers"] as const;
 const schema = [{
   "@context": "https://schema.org", "@type": "ItemList", name: "Free Shopify profit calculators",
-  itemListElement: TOOLS.map((t, i) => ({ "@type": "ListItem", position: i + 1, name: t.name, url: `https://optifin.app${toolUrl(t.slug)}` })),
+  itemListElement: TOOLS.map((t, i) => ({ "@type": "ListItem", position: i + 1, name: t.name, url: `https://www.optifin.app${toolUrl(t.slug)}` })),
 }];
 ---
 <BaseLayout

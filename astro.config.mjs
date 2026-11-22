@@ -5,7 +5,7 @@ import starlight from "@astrojs/starlight";
 // Marketing pages live in src/pages; Starlight serves the docs under /docs
 // (content in src/content/docs/docs). Starlight adds @astrojs/sitemap.
 export default defineConfig({
-  site: "https://optifin.app",
+  site: "https://www.optifin.app",
   trailingSlash: "always",
   integrations: [
     starlight({
@@ -17,7 +17,7 @@ export default defineConfig({
       customCss: ["./src/styles/docs-fonts.css", "./src/styles/tokens.css", "./src/styles/starlight.css"],
       social: [{ icon: "email", label: "Email support", href: "mailto:support@optifin.app" }],
       head: [
-        { tag: "meta", attrs: { property: "og:image", content: "https://optifin.app/og.png" } },
+        { tag: "meta", attrs: { property: "og:image", content: "https://www.optifin.app/og.png" } },
         { tag: "meta", attrs: { name: "twitter:card", content: "summary_large_image" } },
       ],
       components: {
