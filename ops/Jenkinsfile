@@ -25,8 +25,9 @@ pipeline {
     stage('Check request') {
       steps {
         script {
-          if (params.ENVIRONMENT == 'live' && params.BRANCH != 'origin/main') {
-            error('Live only builds main. Choose origin/main, or pick development.')
+          // The branch picker returns "main"; accept "origin/main" too.
+          if (params.ENVIRONMENT == 'live' && params.BRANCH.replaceFirst('^origin/', '') != 'main') {
+            error('Live only builds main. Choose main, or pick development.')
           }
         }
       }
