@@ -1,0 +1,41 @@
+# The two website environments. Installed by ../jenkins/install-ci.sh to
+# /opt/optifin/bin/site/compose.yml and driven only by ci-run.sh, so it never
+# depends on which app commit is checked out.
+#
+#   optifin-site-live  https://optifin.app      (www redirects here)
+#   optifin-site-dev   https://dev.optifin.app  (not indexed by search engines)
+#
+# They join the app stack's "edge" network so its Caddy can reach them.
+name: optifin-site
+
+services:
+  site-live:
+    image: optifin-site:${LIVE_TAG:-none}
+    container_name: optifin-site-live
+    restart: unless-stopped
+    networks: [edge]
+    mem_limit: 128m
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/ >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 5s
+
+  site-dev:
+    image: optifin-site:${DEV_TAG:-none}
+    container_name: optifin-site-dev
+    restart: unless-stopped
+    networks: [edge]
+    mem_limit: 128m
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/ >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 5s
+
+networks:
+  edge:
+    external: true
+    name: optifin_edge
