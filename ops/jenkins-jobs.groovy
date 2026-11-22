@@ -21,7 +21,7 @@ pipelineJob('optifin-site') {
       quickFilterEnabled(true)
       listSize('12')
     }
-    choiceParam('ENVIRONMENT', ['development', 'build-only', 'live'], 'development = deploy to dev.optifin.app. build-only = check that the site builds, deploy nothing. live = main only, asks you to confirm, deploys to optifin.app.')
+    choiceParam('ENVIRONMENT', ['development', 'live'], 'development = deploy to dev.optifin.app. live = main only, asks you to confirm, deploys to optifin.app.')
   }
   definition {
     cpsScm {
