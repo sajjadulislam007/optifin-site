@@ -5,7 +5,7 @@
 
 pipelineJob('optifin-site') {
   displayName('optifin-site')
-  description('Optifin website. Build with Parameters: pick the branch and the environment. development = dev.optifin.app, live = optifin.app (main only, asks you to confirm).')
+  description('Optifin website. Build with Parameters: pick the branch and the environment. development = dev.optifin.app, live = www.optifin.app (main only).')
   parameters {
     gitParameter {
       name('BRANCH')
@@ -21,7 +21,7 @@ pipelineJob('optifin-site') {
       quickFilterEnabled(true)
       listSize('12')
     }
-    choiceParam('ENVIRONMENT', ['development', 'live'], 'development = deploy to dev.optifin.app. live = main only, asks you to confirm, deploys to optifin.app.')
+    choiceParam('ENVIRONMENT', ['development', 'live'], 'development = deploy to dev.optifin.app. live = main only, deploys to www.optifin.app.')
   }
   definition {
     cpsScm {

@@ -5,7 +5,7 @@ Two environments, both built from this repository by Jenkins:
 | Environment | Address | Notes |
 |---|---|---|
 | development | https://dev.optifin.app | not indexed by search engines; check changes here first |
-| live | https://www.optifin.app (optifin.app redirects to it) | main branch only, asks you to confirm |
+| live | https://www.optifin.app (optifin.app redirects to it) | main branch only |
 
 ```
 push a branch -> Jenkins > optifin-site > Build with Parameters
@@ -47,4 +47,4 @@ push a branch -> Jenkins > optifin-site > Build with Parameters
 ## Everyday use
 
 1. Push your branch. 2. Build `development`, check https://dev.optifin.app.
-3. Merge to `main`, build `live`, confirm.
+3. Merge to `main`, build `live`.
