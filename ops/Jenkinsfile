@@ -1,6 +1,5 @@
 // optifin-site: pick a BRANCH and an ENVIRONMENT.
 //   development  build the branch and show it at https://dev.optifin.app
-//   build-only   check that the site builds, deploy nothing
 //   live         main only: build, you confirm, deploy to https://optifin.app
 //
 // Always read from main, never from the branch you pick, so a feature branch
@@ -40,7 +39,7 @@ pipeline {
           userRemoteConfigs: [[url: 'https://github.com/sajjadulislam007/optifin-site.git']]])
         script {
           env.SHA = sh(returnStdout: true, script: 'git rev-parse HEAD').trim()
-          env.TARGET = params.ENVIRONMENT == 'build-only' ? 'build' : params.ENVIRONMENT
+          env.TARGET = params.ENVIRONMENT
           currentBuild.displayName = "#${env.BUILD_NUMBER} ${params.ENVIRONMENT} ${params.BRANCH.replace('origin/', '')} ${env.SHA.take(8)}"
         }
       }
@@ -64,7 +63,6 @@ pipeline {
     }
 
     stage('Deploy') {
-      when { expression { params.ENVIRONMENT != 'build-only' } }
       steps {
         sshagent(credentials: ['host-ci']) {
           sh '$SSH $CI_HOST "site $TARGET $SHA"'

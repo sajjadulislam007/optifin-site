@@ -9,10 +9,8 @@ Two environments, both built from this repository by Jenkins:
 
 ```
 push a branch -> Jenkins > optifin-site > Build with Parameters
-  -> BRANCH + ENVIRONMENT (development / build-only / live) -> Build
+  -> BRANCH + ENVIRONMENT (development / live) -> Build
 ```
-
-`build-only` checks that the site builds and deploys nothing.
 
 ## How it works
 
