@@ -4,7 +4,7 @@
 
 export const SITE = {
   name: "Optifin",
-  url: "https://optifin.app",
+  url: "https://www.optifin.app",
   appUrl: "https://app.optifin.app",
   // TODO(before launch): confirm the final App Store handle.
   appStoreUrl: "https://apps.shopify.com/optifin",
