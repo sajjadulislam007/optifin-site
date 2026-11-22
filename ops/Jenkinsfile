@@ -1,6 +1,6 @@
 // optifin-site: pick a BRANCH and an ENVIRONMENT.
 //   development  build the branch and show it at https://dev.optifin.app
-//   live         main only: build, you confirm, deploy to https://optifin.app
+//   live         main only: build and deploy to https://www.optifin.app
 //
 // Always read from main, never from the branch you pick, so a feature branch
 // cannot change what runs with deploy rights. Jenkins never touches Docker: each
@@ -50,15 +50,6 @@ pipeline {
       steps {
         sshagent(credentials: ['host-ci']) {
           sh '$SSH $CI_HOST "site build $SHA"'
-        }
-      }
-    }
-
-    stage('Confirm live') {
-      when { expression { params.ENVIRONMENT == 'live' } }
-      steps {
-        timeout(time: 30, unit: 'MINUTES') {
-          input message: "Publish ${env.SHA.take(8)} to the live website (optifin.app)? Check it on dev.optifin.app first.", ok: 'Publish live'
         }
       }
     }
