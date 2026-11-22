@@ -11,7 +11,7 @@ pipelineJob('optifin-site') {
       name('BRANCH')
       type('PT_BRANCH')
       description('Git branch to build (every pushed branch appears here)')
-      defaultValue('origin/main')
+      defaultValue('main')
       branch('')
       branchFilter('origin/(.*)')
       tagFilter('*')
