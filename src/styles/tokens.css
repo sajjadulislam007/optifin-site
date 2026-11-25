@@ -51,6 +51,11 @@
   --sl-color-accent-low: #0b2a5c;
   --sl-color-accent: #3b82f6;
   --sl-color-accent-high: #bfdbfe;
+}
+/* Navy surfaces for the dark theme only. This file is unlayered, so anything
+   set on plain :root beats Starlight's own light-theme colours; the light
+   theme must keep Starlight's white background and greys. */
+:root:not([data-theme="light"]) {
   --sl-color-black: #050d1c;
   --sl-color-gray-6: #0d1f3a;
 }
