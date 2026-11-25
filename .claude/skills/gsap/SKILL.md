@@ -79,8 +79,9 @@ mm.add(
   a few bubbles, haze; no caustic pattern or refraction wobble: too noisy), rendered at
   low resolution so it reads soft and far away, dimmer behind the headline.
   Keep it dark and slow: new bars every 8-11 s. Bars have permanent ids so their
-  look never flips when a new bar arrives. Clicking the headline sends a soft
-  band of light through the particles (no rings, no displacement). Labels are abstract numbers, never
+  look never flips when a new bar arrives. The settled headline sways in a very
+  gentle wave (about 1-2 px); there is no click effect (ripples and light bands
+  were tried and felt too much). Labels are abstract numbers, never
   currency. The headline is built only from particles that fly in from depth;
   the settled particles are the finished text (no second, crisp-text step).
   Changes sweep particles back into depth left to right and re-form the next

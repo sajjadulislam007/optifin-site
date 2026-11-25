@@ -443,20 +443,6 @@ export function initHeroScene(): boolean {
     ctx.drawImage(bg, 0, 0, w, h);
   };
 
-  // ---- click: a soft band of light travels through the headline -----------
-  const ripples: { x: number; y: number; t: number }[] = [];
-  const RIPPLE_LIFE = 1600; // ms
-  const lit: number[] = [];
-  hero.addEventListener("pointerdown", (e) => {
-    if ((e.target as HTMLElement).closest("a, button, input, label")) return;
-    const r = hero.getBoundingClientRect();
-    const x = e.clientX - r.left, y = e.clientY - r.top;
-    const pad = 50;
-    if (x < box.left - pad || x > box.left + box.width + pad || y < box.top - pad || y > box.top + box.height + pad) return;
-    ripples.push({ x, y, t: clock });
-    if (ripples.length > 4) ripples.shift();
-  });
-
   // ---- loop -------------------------------------------------------------------------
   const buckets: number[][] = [];
   let raf = 0;
@@ -494,7 +480,6 @@ export function initHeroScene(): boolean {
     const v = vp();
     const f = h * 1.15;
     for (const b of buckets) b.length = 0;
-    lit.length = 0;
     if (xs.length < parts.length * 3) xs = new Float32Array(parts.length * 3);
     for (let i = 0; i < parts.length; i++) {
       const p = parts[i];
@@ -506,15 +491,10 @@ export function initHeroScene(): boolean {
       const z = a * p.az + b2 * p.mz;
       if (u >= 1) {
         p.c = p.nc;
-        x += Math.sin(clock * 0.0014 + p.ph) * 0.3;
-        y += Math.cos(clock * 0.0019 + p.ph) * 0.3;
+        // A very gentle wave runs through the letters, as if seen through still water.
+        y += Math.sin(p.bx * 0.012 + clock * 0.0011) * 1.6;
+        x += Math.sin(p.by * 0.02 + clock * 0.0008) * 0.7;
       } else if (u > 0.5) p.c = p.nc;
-      for (const rp of ripples) {
-        const age = clock - rp.t;
-        if (age > RIPPLE_LIFE) continue;
-        const d = Math.hypot(x - rp.x, y - rp.y);
-        if (Math.abs(d - age * 0.5) < 22) { lit.push(i); break; }
-      }
       const k = f / (f + z);
       xs[i * 3] = v.x + (x - v.x) * k;
       xs[i * 3 + 1] = v.y + (y - v.y) * k;
@@ -543,26 +523,6 @@ export function initHeroScene(): boolean {
     }
     ctx.globalAlpha = 1;
     ctx.shadowBlur = 0;
-    // Light band: particles it is passing glow briefly.
-    let strength = 0;
-    for (let i = ripples.length - 1; i >= 0; i--) {
-      const age = clock - ripples[i].t;
-      if (age > RIPPLE_LIFE) { ripples.splice(i, 1); continue; }
-      strength = Math.max(strength, 1 - age / RIPPLE_LIFE);
-    }
-    if (lit.length && strength > 0) {
-      ctx.fillStyle = `rgba(224,242,254,${(0.75 * strength).toFixed(3)})`;
-      ctx.shadowColor = "rgba(125,211,252,0.9)";
-      ctx.shadowBlur = 10;
-      ctx.beginPath();
-      for (const i of lit) {
-        const r = Math.max(0.6, dot * xs[i * 3 + 2] * 1.15);
-        const x = xs[i * 3], y = xs[i * 3 + 1];
-        ctx.moveTo(x + r, y); ctx.arc(x, y, r, 0, TAU);
-      }
-      ctx.fill();
-      ctx.shadowBlur = 0;
-    }
   };
 
   // ---- sizing and start ------------------------------------------------------------
