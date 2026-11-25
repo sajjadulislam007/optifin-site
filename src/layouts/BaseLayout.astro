@@ -79,8 +79,12 @@ const jsonLd = [...sitewide, ...crumbs, ...schema];
     </main>
     <Footer />
     <script>
+      import { initSmoothScroll } from "../scripts/motion/smooth";
       import { initReveals } from "../scripts/motion/reveal";
+      import { initSpotlight } from "../scripts/motion/spotlight";
+      initSmoothScroll();
       initReveals();
+      initSpotlight();
     </script>
   </body>
 </html>

@@ -1,0 +1,51 @@
+---
+// A slow ticker of the costs Optifin subtracts from Shopify sales. Every item
+// here is something the released app handles (costs, shipping, payment fees,
+// custom/operating costs including ad spend entered as a cost, refunds and
+// returns, discounts, VAT, currency); keep it that way.
+import Icon from "./Icon.astro";
+const items = [
+  { icon: "box", label: "Product costs" },
+  { icon: "globe", label: "Shipping" },
+  { icon: "coins", label: "Payment fees" },
+  { icon: "target", label: "Advertising costs" },
+  { icon: "undo", label: "Refunds and returns" },
+  { icon: "tag", label: "Discounts" },
+  { icon: "doc", label: "VAT in tax-inclusive prices" },
+  { icon: "layers", label: "Operating costs" },
+  { icon: "refresh", label: "Currency conversion" },
+];
+---
+<div class="ticker" aria-label="Costs Optifin counts in your profit">
+  <p class="ticker-label">Counted in your profit</p>
+  <div class="ticker-viewport">
+    <ul class="ticker-track">
+      {[0, 1].map((copy) => items.map((it) => (
+        <li aria-hidden={copy === 1 ? "true" : undefined}><Icon name={it.icon} size={18} /> {it.label}</li>
+      )))}
+    </ul>
+  </div>
+</div>
+
+<style>
+  .ticker { position: relative; display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 28px;
+    width: min(100% - var(--gutter) * 2, var(--container)); margin-inline: auto; padding-block: 22px;
+    border-top: 1px solid rgb(255 255 255 / 0.08); }
+  .ticker-label { margin: 0; font-family: var(--font-display); font-weight: 600; font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--brand-400); white-space: nowrap; }
+  .ticker-viewport { overflow: hidden; -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
+  .ticker-track { display: flex; gap: 44px; width: max-content; margin: 0; padding: 0; list-style: none; }
+  .ticker-track li { display: inline-flex; align-items: center; gap: 10px; white-space: nowrap; font-size: 15.5px; color: #b8c4d6; }
+  .ticker-track :global(svg) { color: var(--brand-400); opacity: 0.9; }
+  @media (prefers-reduced-motion: no-preference) {
+    .ticker-track { animation: ticker 48s linear infinite; padding-right: 44px; }
+    .ticker:hover .ticker-track { animation-play-state: paused; }
+  }
+  /* Reduced motion: no scrolling; the list wraps and the repeat is hidden. */
+  @media (prefers-reduced-motion: reduce) {
+    .ticker-viewport { -webkit-mask-image: none; mask-image: none; }
+    .ticker-track { flex-wrap: wrap; width: auto; gap: 12px 28px; }
+    .ticker-track li[aria-hidden="true"] { display: none; }
+  }
+  @keyframes ticker { to { transform: translateX(-50%); } }
+  @media (max-width: 760px) { .ticker { grid-template-columns: 1fr; gap: 12px; } }
+</style>

@@ -24,7 +24,7 @@ const schema = [{
           <h2 class="eyebrow">{g}</h2>
           <div class="grid">
             {TOOLS.filter((t) => t.group === g).map((t) => (
-              <a class="card tool" href={toolUrl(t.slug)}>
+              <a data-spotlight class="card tool" href={toolUrl(t.slug)}>
                 <h3 class="h3">{t.name}</h3>
                 <p>{t.summary}</p>
                 <span class="link-arrow">Open <Icon name="arrow" size={16} /></span>

@@ -56,7 +56,7 @@ const schema = [{
   <section class="plans-wrap">
     <div class="container plans" data-reveal-group>
       {PLANS.map((p) => (
-        <article class:list={["plan card", { featured: p.featured }]}>
+        <article data-spotlight class:list={["plan card", { featured: p.featured }]}>
           {p.featured && <span class="badge badge--soon flag">Most popular</span>}
           <h2 class="h3">{p.name}</h2>
           <p class="price"><span class="tabular">{p.priceLabel}</span>{p.price > 0 && <small>/month base</small>}</p>
@@ -89,7 +89,11 @@ const schema = [{
   .plans-wrap { background: linear-gradient(var(--navy-900) 0 40%, var(--surface) 40%); padding-bottom: 20px; }
   .plans { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
   .plan { padding: 34px; display: grid; gap: 16px; align-content: start; position: relative; box-shadow: var(--shadow); }
-  .plan.featured { border: 2px solid var(--brand-500); }
+  .plan.featured { border: 2px solid transparent;
+    background: linear-gradient(#fff, #fff) padding-box, conic-gradient(from var(--a, 0deg), #2dd4bf, #2563eb, #3b82f6, #2dd4bf) border-box; }
+  @property --a { syntax: "<angle>"; initial-value: 0deg; inherits: false; }
+  @media (prefers-reduced-motion: no-preference) { .plan.featured { animation: plan-spin 9s linear infinite; } }
+  @keyframes plan-spin { to { --a: 360deg; } }
   .flag { position: absolute; top: -13px; left: 30px; background: #eaf2ff; }
   .price { font-family: var(--font-display); font-size: 52px; font-weight: 700; letter-spacing: -0.03em; line-height: 1; }
   .price small { font-size: 15px; color: var(--ink-muted); font-weight: 500; margin-left: 6px; letter-spacing: 0; }

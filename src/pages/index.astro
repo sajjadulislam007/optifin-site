@@ -2,6 +2,9 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 import Screen from "../components/Screen.astro";
 import Icon from "../components/Icon.astro";
+import HeroChart from "../components/HeroChart.astro";
+import CostTicker from "../components/CostTicker.astro";
+import ProfitPlayground from "../components/ProfitPlayground.astro";
 import { ALSO_INCLUDED, COMING_SOON, FAQ, FEATURES, PLANS, SITE, installUrl } from "../data/site";
 
 const tour = [
@@ -55,6 +58,8 @@ const schema = [
       <div class="glow glow-b"></div>
       <div class="glow glow-c"></div>
       <div class="grid-lines"></div>
+      <div class="grid-hot"></div>
+      <HeroChart />
     </div>
     <div class="container hero-copy">
       <p class="eyebrow hero-eyebrow">Profit analytics for Shopify</p>
@@ -94,6 +99,7 @@ const schema = [
       </div>
     </div>
     <p class="container sample-note hero-note">Shown with sample data.</p>
+    <CostTicker />
   </section>
 
   <!-- 2. REVENUE IS NOT PROFIT ------------------------------------------- -->
@@ -131,13 +137,13 @@ const schema = [
   <!-- 3. TRUST BENTO -------------------------------------------------------- -->
   <section class="section" aria-labelledby="trust-title">
     <div class="container">
-      <div class="section-head" data-reveal>
+      <div class="section-head" data-reveal="head">
         <p class="eyebrow">Numbers you can trust</p>
         <h2 id="trust-title" class="h2">Every number tells you how complete it is.</h2>
         <p class="lead">Most profit apps show a number. Optifin shows the number and what it is based on, so a missing cost never quietly inflates your profit.</p>
       </div>
       <div class="bento" data-reveal-group>
-        <article class="tile tile-hero">
+        <article data-spotlight class="tile tile-hero">
           <div class="tile-copy">
             <h3 class="h3">Coverage on every card</h3>
             <p>A note such as “Based on 93% of product costs” appears the moment a number rests on incomplete inputs, with a link to finish them.</p>
@@ -146,17 +152,17 @@ const schema = [
             <Screen name="dashboard-kpi-card" alt="Net profit card noting it is based on 93% of product costs" bare sizes="(max-width: 900px) 90vw, 560px" />
           </div>
         </article>
-        <article class="tile">
+        <article data-spotlight class="tile">
           <Icon name="eye" size={28} />
           <h3 class="h3">Missing is never $0</h3>
           <p>Products without a cost are flagged and listed, not counted as free.</p>
         </article>
-        <article class="tile">
+        <article data-spotlight class="tile">
           <Icon name="shield" size={28} />
           <h3 class="h3">Honest comparisons</h3>
           <p>When a change would mislead, it is held back and the reason is shown.</p>
         </article>
-        <article class="tile tile-wide">
+        <article data-spotlight class="tile tile-wide">
           <Icon name="layers" size={28} />
           <div>
             <h3 class="h3">One calculation everywhere</h3>
@@ -219,16 +225,19 @@ const schema = [
     </div>
   </section>
 
+  <!-- 5b. INTERACTIVE PROFIT PLAYGROUND ---------------------------------- -->
+  <ProfitPlayground />
+
   <!-- 6. FEATURE GRID -------------------------------------------------------- -->
   <section class="section section--soft" aria-labelledby="features-title">
     <div class="container">
-      <div class="section-head" data-reveal>
+      <div class="section-head" data-reveal="head">
         <p class="eyebrow">Everything included</p>
         <h2 id="features-title" class="h2">Built for the questions you actually ask.</h2>
       </div>
       <div class="feature-grid" data-count={FEATURES.length} data-reveal-group>
         {FEATURES.map((f) => (
-          <a class="feature card" href={`/features/${f.slug}/`}>
+          <a data-spotlight class="feature card" href={`/features/${f.slug}/`}>
             <span class="feature-eyebrow">{f.eyebrow}</span>
             <h3 class="h3">{f.name}</h3>
             <p>{f.summary}</p>
@@ -246,13 +255,13 @@ const schema = [
   <!-- 7. COMING SOON --------------------------------------------------------- -->
   <section class="section section--dark soon" aria-labelledby="soon-title">
     <div class="container">
-      <div class="section-head" data-reveal>
+      <div class="section-head" data-reveal="head">
         <p class="eyebrow">Coming soon</p>
         <h2 id="soon-title" class="h2">We ship what we can prove is right. These are next.</h2>
       </div>
       <ul class="soon-rail" data-reveal-group>
         {COMING_SOON.slice(0, 6).map((c) => (
-          <li class="soon-card">
+          <li class="soon-card" data-spotlight style="--spot: 94 234 212">
             <span class="badge badge--soon">Coming soon</span>
             <Icon name={c.icon} size={26} />
             <h3>{c.title}</h3>
@@ -267,14 +276,14 @@ const schema = [
   <!-- 8. PRICING ------------------------------------------------------------- -->
   <section class="section" aria-labelledby="pricing-title">
     <div class="container">
-      <div class="section-head center" data-reveal>
+      <div class="section-head center" data-reveal="head">
         <p class="eyebrow">Pricing</p>
         <h2 id="pricing-title" class="h2">Start free. Pay as your store grows.</h2>
         <p class="lead">Billed through Shopify. Change plans or cancel any time.</p>
       </div>
       <div class="plans" data-reveal-group>
         {PLANS.map((p) => (
-          <article class:list={["plan card", { featured: p.featured }]}>
+          <article data-spotlight class:list={["plan card", { featured: p.featured }]}>
             {p.featured && <span class="badge badge--soon plan-flag">Most popular</span>}
             <h3 class="h3">{p.name}</h3>
             <p class="plan-price"><span class="tabular">{p.priceLabel}</span>{p.price > 0 && <small>/month base</small>}</p>
@@ -311,12 +320,14 @@ const schema = [
   import { initHome } from "../scripts/motion/home";
   import { initHeroTitle } from "../scripts/motion/heroTitle";
   import { initHeroGradients } from "../scripts/motion/heroGradients";
+  import { initHeroData } from "../scripts/motion/heroData";
   initHome();
   // Hero headline letters: entrance wave + cursor ripple (skipped under
   // reduced motion; the headline then stays plain text).
   if (window.matchMedia("(prefers-reduced-motion: no-preference)").matches) {
     initHeroTitle();
     initHeroGradients();
+    initHeroData();
   }
 </script>
 
@@ -335,6 +346,10 @@ const schema = [
     background-size: 64px 64px;
     mask-image: radial-gradient(ellipse at 50% 20%, #000 20%, transparent 70%);
   }
+  .grid-hot { position: absolute; inset: 0; opacity: 0; transition: opacity 0.6s;
+    background-image: linear-gradient(rgb(94 234 212 / 0.24) 1px, transparent 1px), linear-gradient(90deg, rgb(94 234 212 / 0.24) 1px, transparent 1px); background-size: 64px 64px;
+    -webkit-mask-image: radial-gradient(240px circle at var(--hx, 50%) var(--hy, 50%), #000, transparent 70%); mask-image: radial-gradient(240px circle at var(--hx, 50%) var(--hy, 50%), #000, transparent 70%); }
+  .hero.is-lit .grid-hot { opacity: 1; }
   .hero-copy { position: relative; text-align: center; display: grid; justify-items: center; gap: 26px; }
   .hero-eyebrow { color: var(--brand-400); }
   .hero h1 { max-width: 15ch; }
@@ -357,7 +372,7 @@ const schema = [
     .stage-inner :global(.hero-mobile .screen img) { object-fit: cover; object-position: top; max-height: 604px; }
     .stage-inner { box-shadow: none; }
   }
-  .hero-note { position: relative; color: #6f7f96; padding-bottom: 72px; padding-top: 14px; text-align: center; }
+  .hero-note { position: relative; color: #6f7f96; padding-bottom: 44px; padding-top: 14px; text-align: center; }
   .float { position: absolute; display: flex; align-items: center; gap: 10px; padding: 14px 18px; border-radius: 18px; box-shadow: var(--shadow-lg); border: 1px solid rgb(7 21 41 / 0.06); font-size: 14.5px; color: var(--ink); }
   .float-profit { left: -36px; top: 58%; flex-direction: column; align-items: flex-start; gap: 6px; padding: 18px 22px; }
   .float-label { font-size: 13px; color: var(--ink-muted); font-weight: 500; }
@@ -494,7 +509,11 @@ const schema = [
   /* PLANS */
   .plans { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; align-items: stretch; }
   .plan { padding: 32px; display: grid; gap: 14px; align-content: start; position: relative; }
-  .plan.featured { border: 2px solid var(--brand-500); box-shadow: var(--shadow); }
+  .plan.featured { border: 2px solid transparent; box-shadow: var(--shadow);
+    background: linear-gradient(#fff, #fff) padding-box, conic-gradient(from var(--a, 0deg), #2dd4bf, #2563eb, #3b82f6, #2dd4bf) border-box; }
+  @property --a { syntax: "<angle>"; initial-value: 0deg; inherits: false; }
+  @media (prefers-reduced-motion: no-preference) { .plan.featured { animation: plan-spin 9s linear infinite; } }
+  @keyframes plan-spin { to { --a: 360deg; } }
   .plan-flag { position: absolute; top: -13px; left: 28px; background: #eaf2ff; }
   .plan-price { font-family: var(--font-display); font-size: 44px; font-weight: 700; letter-spacing: -0.03em; line-height: 1; }
   .plan-price small { font-size: 15px; font-weight: 500; color: var(--ink-muted); margin-left: 6px; letter-spacing: 0; }

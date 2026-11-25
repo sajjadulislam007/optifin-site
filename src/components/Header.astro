@@ -13,7 +13,7 @@ const path = Astro.url.pathname;
 const inResources = ["/docs/", "/guides/", "/tools/", "/integrations/", "/changelog/", "/support/", "/security/"].some((p) => path.startsWith(p));
 const inProduct = ["/features/", "/coming-soon/"].some((p) => path.startsWith(p));
 ---
-<header class="site-header" data-tone={tone}>
+<header class="site-header" data-tone={tone} data-over={tone}>
   <div class="container bar">
     <a href="/" class="brand" aria-label="Optifin home">
       <span class="brand-light"><Logo tone="light" size={32} /></span>
@@ -32,7 +32,8 @@ const inProduct = ["/features/", "/coming-soon/"].some((p) => path.startsWith(p)
       </button>
     </div>
   </div>
-  <div id="mobile-nav" class="mobile-nav" hidden>
+  <div class="scroll-progress" aria-hidden="true"><span></span></div>
+  <div id="mobile-nav" data-lenis-prevent class="mobile-nav" hidden>
     <nav class="container" aria-label="Mobile">
       <ProductMenu variant="mobile" />
       <SolutionsMenu variant="mobile" />
@@ -53,10 +54,15 @@ const inProduct = ["/features/", "/coming-soon/"].some((p) => path.startsWith(p)
   .site-header.is-stuck { background: rgb(255 255 255 / 0.82); color: var(--ink); backdrop-filter: saturate(1.6) blur(14px); -webkit-backdrop-filter: saturate(1.6) blur(14px); box-shadow: 0 1px 0 var(--line); }
   .bar { display: flex; align-items: center; justify-content: space-between; gap: 24px; height: 76px; transition: height 0.3s; }
   .is-stuck .bar { height: 64px; }
+  .scroll-progress { position: absolute; left: 0; right: 0; bottom: 0; height: 2px; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+  .is-stuck .scroll-progress { opacity: 1; }
+  .scroll-progress span { display: block; height: 100%; background: var(--brand-gradient); transform: scaleX(var(--progress, 0)); transform-origin: left; }
   .brand { display: inline-flex; text-decoration: none; }
   .brand-dark { display: none; }
-  .site-header[data-tone="dark"]:not(.is-stuck) .brand-light { display: none; }
-  .site-header[data-tone="dark"]:not(.is-stuck) .brand-dark { display: inline-flex; }
+  /* data-over is the tone of whatever is under the bar: the page tone at the top, then the section being scrolled past. */
+  .site-header[data-over="dark"] .brand-light { display: none; }
+  .site-header[data-over="dark"] .brand-dark { display: inline-flex; }
+  .site-header.is-stuck[data-over="dark"] { background: rgb(7 21 41 / 0.74); color: #fff; box-shadow: 0 1px 0 rgb(255 255 255 / 0.08); }
   .nav { display: flex; align-items: center; gap: 6px; }
   .nav a {
     padding: 8px 14px; border-radius: 999px; text-decoration: none; font-weight: 500; font-size: 15.5px;
@@ -93,7 +99,27 @@ const inProduct = ["/features/", "/coming-soon/"].some((p) => path.startsWith(p)
   const header = document.querySelector<HTMLElement>(".site-header");
   const toggle = document.querySelector<HTMLButtonElement>(".menu-toggle");
   const panel = document.getElementById("mobile-nav");
-  const onScroll = () => header?.classList.toggle("is-stuck", window.scrollY > 12);
+  const onScroll = () => {
+    header?.classList.toggle("is-stuck", window.scrollY > 12);
+    const max = document.documentElement.scrollHeight - window.innerHeight;
+    header?.style.setProperty("--progress", String(max > 0 ? Math.min(1, window.scrollY / max) : 0));
+    updateOver();
+  };
+  // Tone under the bar: the page tone at the very top, light while the mobile
+  // menu is open, otherwise whatever section is just below the bar.
+  const DARK = ".section--dark, .hero, .page-hero";
+  let over = "";
+  function updateOver() {
+    if (!header) return;
+    let next = header.dataset.tone || "light";
+    const menuOpen = toggle?.getAttribute("aria-expanded") === "true";
+    if (menuOpen) next = "light";
+    else if (window.scrollY > 12) {
+      const probe = document.elementsFromPoint(window.innerWidth / 2, header.offsetHeight + 6).find((el) => !header.contains(el));
+      next = probe?.closest(DARK) ? "dark" : "light";
+    }
+    if (next !== over) { over = next; header.dataset.over = next; }
+  }
   onScroll();
   window.addEventListener("scroll", onScroll, { passive: true });
   toggle?.addEventListener("click", () => {
@@ -102,5 +128,6 @@ const inProduct = ["/features/", "/coming-soon/"].some((p) => path.startsWith(p)
     toggle.setAttribute("aria-label", open ? "Close menu" : "Open menu");
     if (panel) panel.hidden = !open;
     header?.classList.toggle("is-stuck", open || window.scrollY > 12);
+    updateOver();
   });
 </script>

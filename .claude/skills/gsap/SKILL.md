@@ -53,3 +53,19 @@ mm.add(
   (focusable cards) and fall back to a vertical list on mobile and reduced
   motion.
 - Counting numbers end on the exact value present in the HTML.
+
+## Smooth scroll, pointer effects and data visuals (added with the UX/UI redesign)
+- Lenis (`src/scripts/motion/smooth.ts`) drives scrolling from GSAP's ticker and
+  feeds `ScrollTrigger.update`; it is off under reduced motion. Anything that
+  scrolls inside the page (menus, panels) needs `data-lenis-prevent`.
+- `data-reveal="head"` on a section heading block: eyebrow and paragraph fade up,
+  the `<h2>` rises line by line (SplitText mask). Plain `data-reveal` still fades.
+- `data-spotlight` on a card adds the cursor glow and lit edge (CSS in
+  `global.css`, pointer tracking in `spotlight.ts`); set `--spot: r g b` for dark
+  cards. Fine pointers and no-reduced-motion only.
+- Hero data layer: `HeroChart.astro` + `heroData.ts` (self-drawing revenue and
+  profit lines, grid that lights near the cursor). The chart is abstract: no axis
+  labels or numbers, so it cannot read as a claim.
+- `CostTicker.astro` and `ProfitPlayground.astro` use only figures and costs the
+  released app really handles; the playground uses the same illustrative store as
+  the revenue-to-profit scene and says sales are held constant.

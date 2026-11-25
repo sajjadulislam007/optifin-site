@@ -56,7 +56,7 @@ const extras = extraShots[feature.slug] || [];
     <div class="container">
       <ul class="points" data-reveal-group>
         {feature.points.map((p) => (
-          <li class="card">
+          <li data-spotlight class="card">
             <Icon name="check" size={22} />
             <h2 class="h3">{p.title}</h2>
             <p>{p.body}</p>
@@ -79,7 +79,7 @@ const extras = extraShots[feature.slug] || [];
       <h2 class="h2 others-title" data-reveal>Explore more</h2>
       <div class="others" data-reveal-group>
         {others.map((f) => (
-          <a class="card other" href={`/features/${f.slug}/`}>
+          <a data-spotlight class="card other" href={`/features/${f.slug}/`}>
             <span class="eyebrow">{f.eyebrow}</span>
             <h3 class="h3">{f.name}</h3>
             <p>{f.summary}</p>

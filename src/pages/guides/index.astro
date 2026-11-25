@@ -23,13 +23,13 @@ const guides = (await getCollection("guides")).sort((a, b) => b.data.published.g
             <span class="meta">{g.data.readingMinutes} min read <Icon name="arrow" size={16} /></span>
           </a>
         ))}
-        <a class="guide card tool" href="/tools/profit-margin-calculator/">
+        <a data-spotlight class="guide card tool" href="/tools/profit-margin-calculator/">
           <span class="badge badge--soon">Free tool</span>
           <h2 class="h3">Profit margin calculator</h2>
           <p>Work out profit and margin for one order in seconds.</p>
           <span class="meta">Open the calculator <Icon name="arrow" size={16} /></span>
         </a>
-        <a class="guide card tool" href="/tools/break-even-roas-calculator/">
+        <a data-spotlight class="guide card tool" href="/tools/break-even-roas-calculator/">
           <span class="badge badge--soon">Free tool</span>
           <h2 class="h3">Break-even ROAS calculator</h2>
           <p>Find the ROAS at which your ads stop losing money.</p>

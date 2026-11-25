@@ -19,7 +19,7 @@ const adsLive = launched(["metaAds", "googleAds"]);
     <div class="container">
       <div class="grid" data-reveal-group>
         {INTEGRATIONS.map((i) => (
-          <a class="card item" href={integrationUrl(i.slug)}>
+          <a data-spotlight class="card item" href={integrationUrl(i.slug)}>
             <span class:list={["badge", i.status === "live" ? "badge--live" : "badge--soon"]}>{STATUS_LABEL[i.status]}</span>
             <h2 class="h3">{i.name}</h2>
             <p>{i.lead}</p>

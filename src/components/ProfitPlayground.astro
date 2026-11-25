@@ -1,0 +1,206 @@
+---
+// Interactive example for the landing page: three sliders change a few costs
+// of the same illustrative store used in the revenue-to-profit scene
+// (12,455 revenue; costs 4,120 + 1,050 + 1,180 + 898 + 395), and net profit
+// and margin update live. Sales are held constant, which the note says. The
+// real Profit simulator (/features/simulator/) does this with the store's own
+// numbers. Everything is server-rendered at the default values, so the section
+// is correct without JavaScript.
+import Icon from "./Icon.astro";
+
+const revenue = 12455;
+const base = { product: 4120, ads: 1050, shipping: 1180, operating: 898, fees: 395 };
+const fmt = (n: number) => `${n < 0 ? "−" : ""}$${Math.abs(Math.round(n)).toLocaleString("en-US")}`;
+const baseCosts = Object.values(base).reduce((a, b) => a + b, 0);
+const baseProfit = revenue - baseCosts;
+const segments = [
+  { key: "product", label: "Product costs", value: base.product },
+  { key: "ads", label: "Advertising", value: base.ads },
+  { key: "shipping", label: "Shipping", value: base.shipping },
+  { key: "operating", label: "Operating costs", value: base.operating },
+  { key: "fees", label: "Payment fees", value: base.fees },
+];
+---
+<section class="section section--dark playground" aria-labelledby="play-title" data-playground
+  data-revenue={revenue} data-base={JSON.stringify(base)}>
+  <div class="container play-grid">
+    <div class="play-copy" data-reveal="head">
+      <p class="eyebrow">Profit simulator</p>
+      <h2 id="play-title" class="h2">Test a decision before you make it.</h2>
+      <p class="lead">Move the sliders and watch your profit change. In Optifin the simulator does this with your own store's numbers, then you can plan the quarter around it.</p>
+      <a class="link-arrow" href="/features/simulator/">See the profit simulator <Icon name="arrow" size={16} /></a>
+    </div>
+
+    <div class="panel card" data-spotlight style="--spot: 94 234 212">
+      <div class="result">
+        <div class="result-main">
+          <span class="result-label">Net profit</span>
+          <strong class="tabular result-value" data-out-profit>{fmt(baseProfit)}</strong>
+        </div>
+        <div class="result-chips">
+          <span class="chip" data-out-margin>{Math.round((baseProfit / revenue) * 100)}% margin</span>
+          <span class="chip chip--flat" data-out-delta>Same as the example</span>
+        </div>
+      </div>
+
+      <div class="split" role="img" aria-label="How revenue splits into costs and profit" data-split>
+        {segments.map((s) => <span class={`seg seg--${s.key}`} style={`flex-grow:${s.value}`} data-seg={s.key}></span>)}
+        <span class="seg seg--profit" style={`flex-grow:${baseProfit}`} data-seg="profit"></span>
+      </div>
+      <ul class="legend" aria-hidden="true">
+        {segments.map((s) => <li><i class={`dot dot--${s.key}`}></i>{s.label}</li>)}
+        <li><i class="dot dot--profit"></i>Net profit</li>
+      </ul>
+
+      <div class="controls">
+        <label class="control">
+          <span class="control-top"><span>Advertising spend</span><output class="tabular" data-out="ads">{fmt(base.ads)}</output></span>
+          <input type="range" min="0" max="3000" step="50" value={base.ads} data-in="ads" />
+        </label>
+        <label class="control">
+          <span class="control-top"><span>Product costs</span><output class="tabular" data-out="product">0%</output></span>
+          <input type="range" min="-20" max="20" step="1" value="0" data-in="product" />
+        </label>
+        <label class="control">
+          <span class="control-top"><span>Shipping costs</span><output class="tabular" data-out="shipping">0%</output></span>
+          <input type="range" min="-30" max="30" step="1" value="0" data-in="shipping" />
+        </label>
+      </div>
+
+      <div class="panel-foot">
+        <p class="small">Example store, 30 days. Illustrative figures; sales are held constant.</p>
+        <button type="button" class="reset" data-reset hidden>Reset</button>
+      </div>
+      <p class="sr-only" role="status" aria-live="polite" data-status></p>
+    </div>
+  </div>
+</section>
+
+<script>
+  import { gsap } from "gsap";
+
+  const root = document.querySelector<HTMLElement>("[data-playground]");
+  if (root) {
+    const revenue = Number(root.dataset.revenue);
+    const base = JSON.parse(root.dataset.base || "{}") as Record<string, number>;
+    const baseProfit = revenue - Object.values(base).reduce((a, b) => a + b, 0);
+    const $ = <T extends HTMLElement>(sel: string) => root.querySelector<T>(sel)!;
+    const fmt = (n: number) => `${n < 0 ? "−" : ""}$${Math.abs(Math.round(n)).toLocaleString("en-US")}`;
+    const pct = (n: number) => `${n > 0 ? "+" : n < 0 ? "−" : ""}${Math.abs(n)}%`;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    const inputs = {
+      ads: $<HTMLInputElement>('[data-in="ads"]'),
+      product: $<HTMLInputElement>('[data-in="product"]'),
+      shipping: $<HTMLInputElement>('[data-in="shipping"]'),
+    };
+    const profitEl = $("[data-out-profit]");
+    const marginEl = $("[data-out-margin]");
+    const deltaEl = $("[data-out-delta]");
+    const statusEl = $("[data-status]");
+    const reset = $<HTMLButtonElement>("[data-reset]");
+    const shown = { v: baseProfit };
+
+    const fill = (el: HTMLInputElement) => {
+      const min = Number(el.min), max = Number(el.max);
+      el.style.setProperty("--pct", `${((Number(el.value) - min) / (max - min)) * 100}%`);
+    };
+
+    const render = (announce = false) => {
+      const ads = Number(inputs.ads.value);
+      const product = base.product * (1 + Number(inputs.product.value) / 100);
+      const shipping = base.shipping * (1 + Number(inputs.shipping.value) / 100);
+      const costs = { product, ads, shipping, operating: base.operating, fees: base.fees };
+      const total = Object.values(costs).reduce((a, b) => a + b, 0);
+      const profit = revenue - total;
+      const margin = Math.round((profit / revenue) * 100);
+      const delta = Math.round(profit - baseProfit);
+
+      // Bar: segments share the width in proportion; a loss shows costs only.
+      for (const [k, v] of Object.entries(costs)) {
+        root.querySelector<HTMLElement>(`[data-seg="${k}"]`)!.style.flexGrow = String(Math.max(v, 0));
+      }
+      root.querySelector<HTMLElement>('[data-seg="profit"]')!.style.flexGrow = String(Math.max(profit, 0));
+
+      $('[data-out="ads"]').textContent = fmt(ads);
+      $('[data-out="product"]').textContent = pct(Number(inputs.product.value));
+      $('[data-out="shipping"]').textContent = pct(Number(inputs.shipping.value));
+      marginEl.textContent = `${margin}% margin`;
+      deltaEl.textContent = delta === 0 ? "Same as the example" : `${delta > 0 ? "+" : "−"}${fmt(Math.abs(delta))} vs the example`;
+      deltaEl.className = `chip ${delta > 0 ? "chip--up" : delta < 0 ? "chip--down" : "chip--flat"}`;
+      profitEl.classList.toggle("is-loss", profit < 0);
+
+      if (reduce) profitEl.textContent = fmt(profit);
+      else gsap.to(shown, { v: profit, duration: 0.5, ease: "power3.out", overwrite: true, onUpdate: () => { profitEl.textContent = fmt(shown.v); } });
+
+      reset.hidden = !(delta !== 0 || Number(inputs.ads.value) !== base.ads);
+      Object.values(inputs).forEach(fill);
+      if (announce) statusEl.textContent = `Net profit ${fmt(profit)}, ${margin}% margin, ${delta === 0 ? "the same as the example" : `${fmt(Math.abs(delta))} ${delta > 0 ? "more" : "less"} than the example`}.`;
+    };
+
+    Object.values(inputs).forEach((el) => {
+      el.addEventListener("input", () => render());
+      el.addEventListener("change", () => render(true));
+    });
+    reset.addEventListener("click", () => {
+      inputs.ads.value = String(base.ads);
+      inputs.product.value = "0";
+      inputs.shipping.value = "0";
+      render(true);
+    });
+    render();
+  }
+</script>
+
+<style>
+  .play-grid { display: grid; grid-template-columns: 0.9fr 1.1fr; gap: clamp(32px, 6vw, 96px); align-items: center; }
+  .play-copy { display: grid; gap: 22px; }
+  .panel { background: #0d1f3a; border-color: rgb(255 255 255 / 0.09); padding: clamp(22px, 3vw, 36px); color: #e8edf5; box-shadow: 0 40px 80px -40px rgb(0 0 0 / 0.6); display: grid; gap: 22px; }
+
+  .result { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
+  .result-main { display: grid; gap: 4px; }
+  .result-label { font-size: 14px; letter-spacing: 0.06em; text-transform: uppercase; color: #93a3ba; font-family: var(--font-display); }
+  .result-value { font-family: var(--font-display); font-size: clamp(40px, 5vw, 58px); line-height: 1; letter-spacing: -0.035em; color: #3ddc97; transition: color 0.3s; }
+  .result-value.is-loss { color: #ff7b7b; }
+  .result-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+  .chip { padding: 6px 12px; border-radius: 999px; font-size: 13.5px; font-weight: 600; background: rgb(255 255 255 / 0.07); color: #c9d4e4; line-height: 1; }
+  .chip--up { background: rgb(61 220 151 / 0.14); color: #5eecb0; }
+  .chip--down { background: rgb(255 123 123 / 0.14); color: #ff9a9a; }
+
+  .split { display: flex; height: 16px; border-radius: 99px; overflow: hidden; gap: 2px; background: rgb(255 255 255 / 0.05); }
+  .seg { display: block; flex: 1 1 0; min-width: 0; transition: flex-grow 0.35s cubic-bezier(.2,.8,.2,1); }
+  .seg--product { background: #2563eb; }
+  .seg--ads { background: #3b82f6; }
+  .seg--shipping { background: #60a5fa; }
+  .seg--operating { background: #93c5fd; }
+  .seg--fees { background: #475569; }
+  .seg--profit { background: #3ddc97; }
+  .legend { display: flex; flex-wrap: wrap; gap: 8px 18px; list-style: none; margin: -6px 0 0; padding: 0; font-size: 13px; color: #93a3ba; }
+  .legend li { display: inline-flex; align-items: center; gap: 7px; }
+  .dot { width: 9px; height: 9px; border-radius: 3px; display: inline-block; }
+  .dot--product { background: #2563eb; } .dot--ads { background: #3b82f6; } .dot--shipping { background: #60a5fa; }
+  .dot--operating { background: #93c5fd; } .dot--fees { background: #475569; } .dot--profit { background: #3ddc97; }
+
+  .controls { display: grid; gap: 20px; padding-top: 6px; border-top: 1px dashed rgb(255 255 255 / 0.14); padding-top: 22px; }
+  .control { display: grid; gap: 10px; cursor: pointer; }
+  .control-top { display: flex; justify-content: space-between; gap: 12px; font-size: 15px; color: #c9d4e4; }
+  .control-top output { color: #fff; font-weight: 600; }
+
+  input[type="range"] { -webkit-appearance: none; appearance: none; width: 100%; height: 28px; background: transparent; margin: 0; cursor: pointer; --pct: 50%; }
+  input[type="range"]::-webkit-slider-runnable-track { height: 6px; border-radius: 99px; background: linear-gradient(90deg, #2dd4bf, #3b82f6) 0 0 / var(--pct) 100% no-repeat, rgb(255 255 255 / 0.12); }
+  input[type="range"]::-moz-range-track { height: 6px; border-radius: 99px; background: rgb(255 255 255 / 0.12); }
+  input[type="range"]::-moz-range-progress { height: 6px; border-radius: 99px; background: linear-gradient(90deg, #2dd4bf, #3b82f6); }
+  input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; margin-top: -8px; border-radius: 50%; background: #fff; border: 0; box-shadow: 0 2px 10px rgb(0 0 0 / 0.45), 0 0 0 5px rgb(59 130 246 / 0.25); transition: box-shadow 0.2s, transform 0.2s; }
+  input[type="range"]::-moz-range-thumb { width: 22px; height: 22px; border-radius: 50%; background: #fff; border: 0; box-shadow: 0 2px 10px rgb(0 0 0 / 0.45), 0 0 0 5px rgb(59 130 246 / 0.25); }
+  input[type="range"]:hover::-webkit-slider-thumb { transform: scale(1.08); }
+  input[type="range"]:focus-visible { outline: none; }
+  input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 2px 10px rgb(0 0 0 / 0.45), 0 0 0 5px rgb(45 212 191 / 0.55); }
+  input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 2px 10px rgb(0 0 0 / 0.45), 0 0 0 5px rgb(45 212 191 / 0.55); }
+
+  .panel-foot { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .panel-foot .small { color: #8392a8; }
+  .reset { background: transparent; border: 1px solid rgb(255 255 255 / 0.22); color: #e8edf5; border-radius: 999px; padding: 6px 14px; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+  .reset:hover { background: rgb(255 255 255 / 0.08); }
+  @media (max-width: 900px) { .play-grid { grid-template-columns: 1fr; } }
+  @media (prefers-reduced-motion: reduce) { .seg { transition: none; } }
+</style>
