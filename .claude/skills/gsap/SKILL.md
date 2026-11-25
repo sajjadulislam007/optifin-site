@@ -72,10 +72,12 @@ mm.add(
 - Keep animated SVG children (pulses, filters) out of the hero: they repaint the
   whole layer every frame. Do not put `filter: blur()` on large animated
   gradients; the gradients are already soft.
-- Home hero (`scripts/motion/heroScene.ts`): a live glowing growth chart in the
-  background (bars with light columns and reflections that scroll as new bars
-  grow in, a rising trend line with nodes, counting labels, an arrowhead and
-  sparks, bokeh), dimmer behind the headline. Labels are abstract numbers, never
+- Home hero (`scripts/motion/heroScene.ts`): a deep, slow analytics scene in the
+  background: two growth charts at different distances (bars, trend line with a
+  soft area, gridlines, counting labels, a quiet arrowhead, slow lights on the
+  line) seen through dark water (light rays, drifting specks, haze), rendered at
+  low resolution so it reads soft and far away, dimmer behind the headline.
+  Keep it dark and slow: new bars every 8-11 s. Labels are abstract numbers, never
   currency. The headline is built only from particles that fly in from depth;
   the settled particles are the finished text (no second, crisp-text step).
   Changes sweep particles back into depth left to right and re-form the next

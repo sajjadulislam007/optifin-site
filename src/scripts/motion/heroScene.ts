@@ -1,14 +1,12 @@
-// Home hero scene: a live, glowing growth chart in the background and a
+// Home hero scene: a deep, slow analytics scene in the background and a
 // headline built from particles that fly in from deep behind it.
 //
-// Background (one canvas, slow and continuous):
-//  - glowing bars with light columns and floor reflections; the chart scrolls
-//    slowly as new bars grow in from the right,
-//  - a rising trend line through the bar tops, with glowing nodes, value
-//    labels that count, an arrowhead and sparks travelling along it,
-//  - soft bokeh lights drifting upward and a bright floor line.
-//  It is dimmer in the middle, behind the headline, and brighter at the sides.
-//  The figures are abstract (no currency, no axis), so they are not claims.
+// Background: two growth charts at different distances (bars, trend line with
+// a soft area, gridlines, counting labels, a quiet arrowhead, slow lights on
+// the line), seen through dark water: faint light rays from above, drifting
+// specks and a haze. It moves very slowly, is dimmer behind the headline, and
+// is rendered at low resolution so it looks soft and far away. The figures
+// are abstract (no currency, no axis), so they are not claims.
 //
 // Headline: particles fly in from depth and settle into the words; that
 // settled state is the finished text (tightly packed, softly glowing). Each
@@ -212,160 +210,189 @@ export function initHeroScene(): boolean {
     return last;
   };
 
-  // ---- background: the live growth chart --------------------------------------
-  // A random walk with an upward drift; the chart shows a moving window of it.
-  const series: number[] = [];
-  let level = 20;
-  // Steady climb with noise, like the growth chart it imitates. Values are
-  // rebased now and then so they never grow without limit; labels are shown
-  // relative to the left edge, so rebasing is invisible.
-  const nextValue = () => { level = Math.max(1, level * (1 + 0.045 + (Math.random() - 0.45) * 0.11)); return level; };
-  for (let i = 0; i < 40; i++) series.push(nextValue());
-  const BAR_EVERY = 2600;   // ms between new bars
-  let scroll = 0;           // 0..1 progress towards the next bar
-  let scaleMax = Math.max(...series.slice(-30));
-  const sparks: { u: number; sp: number }[] = [];
-  let sparkClock = 0;
-  const bokeh = Array.from({ length: small ? 26 : 60 }, () => ({
-    x: Math.random(), y: Math.random(), r: 0.6 + Math.random() * 2.6, sp: 0.00002 + Math.random() * 0.00005, ph: Math.random() * TAU, a: 0.15 + Math.random() * 0.45,
+  // ---- background: a deep, slow analytics scene -------------------------------
+  // Two charts at different distances (far = smaller, fainter, slower), seen
+  // through dark water: faint light rays from above, slow drifting specks and
+  // a haze. It is drawn into a low-resolution buffer and scaled up, which
+  // softens it like distance and water would, and costs less to draw.
+  type Layer = {
+    series: number[]; level: number; scroll: number; scaleMax: number;
+    every: number; scale: number; alpha: number; lift: number; bars: number;
+    sparks: { u: number; sp: number }[]; sparkClock: number;
+  };
+  const makeLayer = (every: number, scale: number, alpha: number, lift: number, bars: number): Layer => {
+    const l: Layer = { series: [], level: 20, scroll: Math.random(), scaleMax: 1, every, scale, alpha, lift, bars, sparks: [], sparkClock: 0 };
+    for (let i = 0; i < 40; i++) l.series.push(grow(l));
+    l.scaleMax = Math.max(...l.series.slice(-bars - 2));
+    return l;
+  };
+  // Steady climb with noise. Values are rebased now and then so they never grow
+  // without limit; labels are relative to the left edge, so rebasing is invisible.
+  function grow(l: Layer) { l.level = Math.max(1, l.level * (1 + 0.04 + (Math.random() - 0.45) * 0.09)); return l.level; }
+  const layers = [
+    makeLayer(11000, 0.62, 0.42, 0.16, small ? 12 : 30), // far
+    makeLayer(8000, 0.9, 0.62, 0, small ? 10 : 22),     // nearer
+  ];
+  const snow = Array.from({ length: small ? 30 : 70 }, () => ({
+    x: Math.random(), y: Math.random(), r: 0.5 + Math.random() * 1.4, sp: 0.000004 + Math.random() * 0.000008, ph: Math.random() * TAU, a: 0.12 + Math.random() * 0.3,
   }));
+  const rays = Array.from({ length: 5 }, (_, i) => ({ x: 0.12 + i * 0.19 + (Math.random() - 0.5) * 0.06, wid: 0.06 + Math.random() * 0.06, ph: Math.random() * TAU }));
   const fmtNum = (n: number) => Math.round(n * 1000).toLocaleString("en-US");
+  const bg = document.createElement("canvas");
+  const bgx = bg.getContext("2d")!;
+  const BG_SCALE = 0.6;
+  const bodyFont = getComputedStyle(document.body).fontFamily;
 
-  const drawWorld = (clock: number, ms: number) => {
-    const visibleBars = small ? 14 : 26;
-    scroll += ms / BAR_EVERY;
-    if (scroll >= 1) {
-      scroll -= 1; series.push(nextValue()); if (series.length > 80) series.shift();
-      if (level > 1e6) { const k = 1e-3; for (let i = 0; i < series.length; i++) series[i] *= k; level *= k; scaleMax *= k; }
+  const drawLayer = (l: Layer, ms: number, base: number, fullH: number, fade: (x: number) => number) => {
+    l.scroll += ms / l.every;
+    if (l.scroll >= 1) {
+      l.scroll -= 1; l.series.push(grow(l)); if (l.series.length > 80) l.series.shift();
+      if (l.level > 1e6) { const k = 1e-3; l.series.forEach((_, i) => (l.series[i] *= k)); l.level *= k; l.scaleMax *= k; }
     }
-    const view = series.slice(-(visibleBars + 2));
-    scaleMax += (Math.max(...view) * 1.08 - scaleMax) * 0.01; // the scale follows the data smoothly
+    const view = l.series.slice(-(l.bars + 2));
+    l.scaleMax += (Math.max(...view) * 1.1 - l.scaleMax) * 0.004;
 
-    const base = Math.min(h - 12, copy.offsetTop + copy.offsetHeight + 46);
-    const top = box.top + box.height * 0.72; // peaks stay below the headline
-    const chartH = base - top;
-    const left = w * 0.02, right = w * 0.88;
-    const gap = (right - left) / (visibleBars - 1);
-    const xOf = (i: number) => left + (i - scroll) * gap;      // i = index in view
-    const growIn = Math.min(1, scroll * 3);                     // the newest bar grows up
-    const yOf = (v: number) => base - (v / scaleMax) * chartH;
-    // Dimmer in the middle, behind the headline.
-    const fade = (x: number) => { const d = Math.abs(x / w - 0.5) * 2; return 0.16 + 0.84 * Math.min(1, d * d * 1.8); };
+    const width = w * 0.9 * l.scale;
+    const left = (w - width) / 2;
+    const b = base - l.lift * fullH;
+    const chartH = fullH * l.scale;
+    const gap = width / (l.bars - 1);
+    const xOf = (i: number) => left + (i - l.scroll) * gap;
+    const yOf = (v: number) => b - (v / l.scaleMax) * chartH;
+    const growIn = Math.min(1, l.scroll * 2.5);
+    const A = l.alpha;
 
-    // Floor line and glow.
-    const fl = ctx.createLinearGradient(0, 0, w, 0);
-    fl.addColorStop(0, "rgba(59,130,246,0)"); fl.addColorStop(0.5, "rgba(96,165,250,0.55)"); fl.addColorStop(1, "rgba(59,130,246,0)");
-    ctx.fillStyle = fl; ctx.fillRect(0, base, w, 1.5);
-    const fg = ctx.createLinearGradient(0, base - 30, 0, base + 40);
-    fg.addColorStop(0, "rgba(37,99,235,0)"); fg.addColorStop(0.45, "rgba(37,99,235,0.16)"); fg.addColorStop(1, "rgba(37,99,235,0)");
-    ctx.fillStyle = fg; ctx.fillRect(0, base - 30, w, 70);
+    // Gridlines, like an analytics panel.
+    bgx.setLineDash([3, 6]);
+    bgx.lineWidth = 1;
+    for (let g = 1; g <= 4; g++) {
+      const y = b - (chartH * g) / 4;
+      bgx.strokeStyle = `rgba(148,163,184,${(0.07 * A).toFixed(3)})`;
+      bgx.beginPath(); bgx.moveTo(left - gap, y); bgx.lineTo(left + width + gap, y); bgx.stroke();
+    }
+    bgx.setLineDash([]);
+    bgx.fillStyle = `rgba(96,165,250,${(0.35 * A).toFixed(3)})`;
+    bgx.fillRect(left - gap, b, width + gap * 2, 1);
 
-    // Bars, light columns and reflections.
-    const bw = Math.max(5, gap * 0.34);
+    // Bars.
+    const bw = Math.max(3, gap * 0.36);
     view.forEach((v, i) => {
       const x = xOf(i);
-      if (x < -gap || x > w + gap) return;
+      if (x < left - gap || x > left + width + gap) return;
       const isNew = i === view.length - 1;
-      const val = isNew ? v * growIn : v;
-      const y = yOf(val);
-      const a = fade(x) * (isNew ? growIn : 1);
-      const narrow = i % 3 === 1 ? 0.6 : 1;
-      const bwi = bw * narrow;
-      // Light column above the bar.
-      const col = ctx.createLinearGradient(0, top - 40, 0, y);
-      col.addColorStop(0, "rgba(56,189,248,0)"); col.addColorStop(1, `rgba(56,189,248,${(0.07 * a).toFixed(3)})`);
-      ctx.fillStyle = col; ctx.fillRect(x - bwi * 0.8, top - 40, bwi * 1.6, y - top + 40);
-      // The bar.
-      const g = ctx.createLinearGradient(0, y, 0, base);
-      g.addColorStop(0, `rgba(125,211,252,${(0.85 * a).toFixed(3)})`);
-      g.addColorStop(0.25, `rgba(59,130,246,${(0.55 * a).toFixed(3)})`);
-      g.addColorStop(1, `rgba(37,99,235,${(0.12 * a).toFixed(3)})`);
-      ctx.fillStyle = g; ctx.fillRect(x - bwi / 2, y, bwi, base - y);
-      ctx.fillStyle = `rgba(224,242,254,${(0.9 * a).toFixed(3)})`; ctx.fillRect(x - bwi / 2, y, bwi, 1.5);
-      // Reflection on the floor.
-      const rh = Math.min(46, (base - y) * 0.35);
-      const rg = ctx.createLinearGradient(0, base, 0, base + rh);
-      rg.addColorStop(0, `rgba(59,130,246,${(0.28 * a).toFixed(3)})`); rg.addColorStop(1, "rgba(59,130,246,0)");
-      ctx.fillStyle = rg; ctx.fillRect(x - bwi / 2, base + 2, bwi, rh);
+      const y = yOf(isNew ? v * growIn : v);
+      const a = A * fade(x) * (isNew ? growIn : 1);
+      const bwi = bw * (i % 3 === 1 ? 0.62 : 1);
+      const col = bgx.createLinearGradient(0, b - chartH * 1.1, 0, y);
+      col.addColorStop(0, "rgba(56,189,248,0)"); col.addColorStop(1, `rgba(56,189,248,${(0.05 * a).toFixed(3)})`);
+      bgx.fillStyle = col; bgx.fillRect(x - bwi * 0.8, b - chartH * 1.1, bwi * 1.6, y - (b - chartH * 1.1));
+      const g = bgx.createLinearGradient(0, y, 0, b);
+      g.addColorStop(0, `rgba(125,211,252,${(0.6 * a).toFixed(3)})`);
+      g.addColorStop(0.3, `rgba(59,130,246,${(0.38 * a).toFixed(3)})`);
+      g.addColorStop(1, `rgba(30,64,175,${(0.08 * a).toFixed(3)})`);
+      bgx.fillStyle = g; bgx.fillRect(x - bwi / 2, y, bwi, b - y);
+      bgx.fillStyle = `rgba(186,230,253,${(0.55 * a).toFixed(3)})`; bgx.fillRect(x - bwi / 2, y, bwi, 1.2);
+      const rh = Math.min(30 * l.scale, (b - y) * 0.3);
+      const rg = bgx.createLinearGradient(0, b, 0, b + rh);
+      rg.addColorStop(0, `rgba(59,130,246,${(0.18 * a).toFixed(3)})`); rg.addColorStop(1, "rgba(59,130,246,0)");
+      bgx.fillStyle = rg; bgx.fillRect(x - bwi / 2, b + 2, bwi, rh);
     });
 
-    // Trend line through the bar tops (the newest point eases in).
-    const pts: { x: number; y: number; v: number }[] = view.map((v, i) => {
-      const isNew = i === view.length - 1;
+    // Trend line with a soft area under it.
+    const pts = view.map((v, i) => {
       const prev = view[Math.max(0, i - 1)];
-      const val = isNew ? prev + (v - prev) * growIn : v;
-      return { x: xOf(i), y: yOf(val) - 18, v: val };
+      const val = i === view.length - 1 ? prev + (v - prev) * growIn : v;
+      return { x: xOf(i), y: yOf(val) - 14 * l.scale, v: val };
     });
-    ctx.save();
-    ctx.lineWidth = 2.2;
-    ctx.lineJoin = "round";
-    ctx.shadowColor = "rgba(96,165,250,0.9)";
-    ctx.shadowBlur = 12;
-    const lg = ctx.createLinearGradient(0, 0, w, 0);
-    lg.addColorStop(0, "rgba(147,197,253,0.15)"); lg.addColorStop(0.45, "rgba(147,197,253,0.35)"); lg.addColorStop(1, "rgba(224,242,254,0.95)");
-    ctx.strokeStyle = lg;
-    ctx.beginPath();
-    pts.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)));
-    ctx.stroke();
-    // Nodes and labels.
-    ctx.font = `600 ${small ? 10 : 12}px ${getComputedStyle(document.body).fontFamily}`;
-    ctx.textAlign = "center";
+    const area = bgx.createLinearGradient(0, b - chartH, 0, b);
+    area.addColorStop(0, `rgba(56,189,248,${(0.10 * A).toFixed(3)})`); area.addColorStop(1, "rgba(56,189,248,0)");
+    bgx.fillStyle = area;
+    bgx.beginPath();
+    pts.forEach((p, i) => (i ? bgx.lineTo(p.x, p.y) : bgx.moveTo(p.x, p.y)));
+    bgx.lineTo(pts[pts.length - 1].x, b); bgx.lineTo(pts[0].x, b); bgx.closePath(); bgx.fill();
+    const lg = bgx.createLinearGradient(left, 0, left + width, 0);
+    lg.addColorStop(0, `rgba(147,197,253,${(0.12 * A).toFixed(3)})`); lg.addColorStop(1, `rgba(224,242,254,${(0.75 * A).toFixed(3)})`);
+    bgx.strokeStyle = lg; bgx.lineWidth = 1.6; bgx.lineJoin = "round";
+    bgx.beginPath();
+    pts.forEach((p, i) => (i ? bgx.lineTo(p.x, p.y) : bgx.moveTo(p.x, p.y)));
+    bgx.stroke();
+    bgx.font = `500 ${Math.round((small ? 9 : 11) * Math.max(0.8, l.scale))}px ${bodyFont}`;
+    bgx.textAlign = "center";
     pts.forEach((p, i) => {
-      if (p.x < 0 || p.x > w) return;
-      const a = fade(p.x);
-      if (i % 2 === 0 || i === pts.length - 1) {
-        ctx.fillStyle = `rgba(224,242,254,${(0.9 * a).toFixed(3)})`;
-        ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, TAU); ctx.fill();
-      }
-      if (i % 5 === 3 || i === pts.length - 2) {
-        ctx.shadowBlur = 0;
-        ctx.fillStyle = `rgba(191,219,254,${(0.7 * a).toFixed(3)})`;
-        ctx.fillText(fmtNum((p.v / view[0]) * 12.4), p.x, p.y - 14);
-        ctx.shadowBlur = 12;
-      }
+      const a = A * fade(p.x);
+      if (i % 2 === 0) { bgx.fillStyle = `rgba(224,242,254,${(0.7 * a).toFixed(3)})`; bgx.beginPath(); bgx.arc(p.x, p.y, 2.2 * l.scale + 0.6, 0, TAU); bgx.fill(); }
+      if (i % 6 === 4) { bgx.fillStyle = `rgba(191,219,254,${(0.5 * a).toFixed(3)})`; bgx.fillText(fmtNum((p.v / view[0]) * 12.4), p.x, p.y - 11); }
     });
-    // Arrowhead on the newest point.
+    // A quiet arrowhead on the newest point.
     const e = pts[pts.length - 1], d = pts[pts.length - 2];
     if (e && d) {
-      const ang = Math.atan2(e.y - d.y, e.x - d.x);
-      const L = small ? 14 : 22;
-      ctx.fillStyle = "rgba(240,249,255,0.95)";
-      ctx.shadowColor = "rgba(147,197,253,1)";
-      ctx.shadowBlur = 22;
-      ctx.beginPath();
-      ctx.moveTo(e.x + Math.cos(ang) * L, e.y + Math.sin(ang) * L);
-      ctx.lineTo(e.x + Math.cos(ang + 2.5) * L * 0.75, e.y + Math.sin(ang + 2.5) * L * 0.75);
-      ctx.lineTo(e.x + Math.cos(ang - 2.5) * L * 0.75, e.y + Math.sin(ang - 2.5) * L * 0.75);
-      ctx.closePath(); ctx.fill();
+      const ang = Math.atan2(e.y - d.y, e.x - d.x), L = (small ? 10 : 15) * l.scale;
+      bgx.fillStyle = `rgba(224,242,254,${(0.8 * A).toFixed(3)})`;
+      bgx.beginPath();
+      bgx.moveTo(e.x + Math.cos(ang) * L, e.y + Math.sin(ang) * L);
+      bgx.lineTo(e.x + Math.cos(ang + 2.5) * L * 0.75, e.y + Math.sin(ang + 2.5) * L * 0.75);
+      bgx.lineTo(e.x + Math.cos(ang - 2.5) * L * 0.75, e.y + Math.sin(ang - 2.5) * L * 0.75);
+      bgx.closePath(); bgx.fill();
     }
-    ctx.restore();
-
-    // Sparks travelling along the line towards the arrow.
-    sparkClock += ms;
-    if (sparkClock > 700 && sparks.length < 6) { sparkClock = 0; sparks.push({ u: 0, sp: 0.00012 + Math.random() * 0.00008 }); }
-    for (let i = sparks.length - 1; i >= 0; i--) {
-      const s = sparks[i];
+    // Slow lights travelling along the line.
+    l.sparkClock += ms;
+    if (l.sparkClock > 2600 && l.sparks.length < 2) { l.sparkClock = 0; l.sparks.push({ u: 0, sp: 0.000035 + Math.random() * 0.00002 }); }
+    for (let i = l.sparks.length - 1; i >= 0; i--) {
+      const s = l.sparks[i];
       s.u += s.sp * ms;
-      if (s.u >= 1) { sparks.splice(i, 1); continue; }
-      const f = s.u * (pts.length - 1);
-      const k = Math.floor(f), t = f - k;
+      if (s.u >= 1) { l.sparks.splice(i, 1); continue; }
+      const f = s.u * (pts.length - 1), k = Math.floor(f), t = f - k;
       const p0 = pts[k], p1 = pts[Math.min(pts.length - 1, k + 1)];
       const x = p0.x + (p1.x - p0.x) * t, y = p0.y + (p1.y - p0.y) * t;
-      const g = ctx.createRadialGradient(x, y, 0, x, y, 10);
-      g.addColorStop(0, `rgba(240,249,255,${(0.9 * fade(x)).toFixed(3)})`); g.addColorStop(1, "rgba(96,165,250,0)");
-      ctx.fillStyle = g; ctx.fillRect(x - 10, y - 10, 20, 20);
+      const g = bgx.createRadialGradient(x, y, 0, x, y, 9);
+      g.addColorStop(0, `rgba(224,242,254,${(0.6 * A * fade(x)).toFixed(3)})`); g.addColorStop(1, "rgba(96,165,250,0)");
+      bgx.fillStyle = g; bgx.fillRect(x - 9, y - 9, 18, 18);
+    }
+  };
+
+  const drawWorld = (clock: number, ms: number) => {
+    const bw = Math.max(1, Math.round(w * BG_SCALE)), bh = Math.max(1, Math.round(h * BG_SCALE));
+    if (bg.width !== bw || bg.height !== bh) { bg.width = bw; bg.height = bh; }
+    bgx.setTransform(BG_SCALE, 0, 0, BG_SCALE, 0, 0);
+    bgx.clearRect(0, 0, w, h);
+
+    const base = Math.min(h - 12, copy.offsetTop + copy.offsetHeight + 40);
+    const fullH = Math.max(60, base - (box.top + box.height * 0.72));
+    // Dimmer in the middle, behind the headline.
+    const fade = (x: number) => { const d = Math.abs(x / w - 0.5) * 2; return 0.14 + 0.86 * Math.min(1, d * d * 1.8); };
+
+    // Light from the surface: wide, faint beams that sway very slowly.
+    for (const r of rays) {
+      const sway = Math.sin(clock * 0.00006 + r.ph);
+      const x = (r.x + sway * 0.03) * w, wid = r.wid * w;
+      const a = 0.03 + 0.02 * Math.sin(clock * 0.00009 + r.ph * 2);
+      const g = bgx.createLinearGradient(0, 0, 0, h * 0.9);
+      g.addColorStop(0, `rgba(56,189,248,${a.toFixed(3)})`); g.addColorStop(1, "rgba(56,189,248,0)");
+      bgx.fillStyle = g;
+      bgx.beginPath();
+      bgx.moveTo(x - wid * 0.3, 0); bgx.lineTo(x + wid * 0.3, 0);
+      bgx.lineTo(x + wid + sway * 40, h * 0.9); bgx.lineTo(x - wid + sway * 40, h * 0.9);
+      bgx.closePath(); bgx.fill();
     }
 
-    // Bokeh drifting upward.
-    for (const b of bokeh) {
-      b.y -= b.sp * ms;
-      if (b.y < -0.05) { b.y = 1.05; b.x = Math.random(); }
-      const x = b.x * w + Math.sin(clock * 0.0003 + b.ph) * 12;
-      const y = b.y * h;
-      const tw = 0.6 + 0.4 * Math.sin(clock * 0.0012 + b.ph);
-      ctx.fillStyle = `rgba(147,197,253,${(b.a * tw * fade(x)).toFixed(3)})`;
-      ctx.beginPath(); ctx.arc(x, y, b.r, 0, TAU); ctx.fill();
+    for (const l of layers) drawLayer(l, ms, base, fullH, fade);
+
+    // Drifting specks, very slow, rising with a gentle sway.
+    for (const s of snow) {
+      s.y -= s.sp * ms;
+      if (s.y < -0.03) { s.y = 1.03; s.x = Math.random(); }
+      const x = s.x * w + Math.sin(clock * 0.00012 + s.ph) * 14;
+      const tw = 0.7 + 0.3 * Math.sin(clock * 0.0005 + s.ph);
+      bgx.fillStyle = `rgba(165,200,240,${(s.a * tw).toFixed(3)})`;
+      bgx.beginPath(); bgx.arc(x, s.y * h, s.r, 0, TAU); bgx.fill();
     }
+
+    // Deep-water haze: darker towards the bottom and the edges.
+    const haze = bgx.createLinearGradient(0, 0, 0, h);
+    haze.addColorStop(0, "rgba(5,13,28,0.15)"); haze.addColorStop(1, "rgba(5,13,28,0.45)");
+    bgx.fillStyle = haze; bgx.fillRect(0, 0, w, h);
+
+    ctx.drawImage(bg, 0, 0, w, h);
   };
 
   // ---- loop -------------------------------------------------------------------------
