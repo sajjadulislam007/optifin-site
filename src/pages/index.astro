@@ -25,7 +25,15 @@ const costs = [
 ];
 const revenue = 12455;
 const profit = revenue - costs.reduce((s, c) => s + c.value, 0);
-const fmt = (n: number) => `$${n.toLocaleString("en-US")}`;
+const fmt = (n: number) => `${n.toLocaleString("en-US")}`;
+// Slogans the particle headline cycles through after the real headline
+// (scripts/motion/particleTitle.ts). Plain words, then the gradient words.
+// Only claims the released app supports.
+const heroPhrases = [
+  { t: "Every cost", a: "counted." },
+  { t: "Missing costs are", a: "never $0." },
+  { t: "Know what you", a: "really keep." },
+];
 
 const schema = [
   {
@@ -63,7 +71,7 @@ const schema = [
     </div>
     <div class="container hero-copy">
       <p class="eyebrow hero-eyebrow">Profit analytics for Shopify</p>
-      <h1 id="hero-title" class="display" data-hero-title>
+      <h1 id="hero-title" class="display" data-hero-title data-particle-title data-phrases={JSON.stringify(heroPhrases)}>
         Your true Shopify profit,{" "}<span class="gradient-text">with nothing hidden.</span>
       </h1>
       <p class="lead hero-lead" data-hero-fade>
@@ -321,11 +329,13 @@ const schema = [
   import { initHeroTitle } from "../scripts/motion/heroTitle";
   import { initHeroGradients } from "../scripts/motion/heroGradients";
   import { initHeroData } from "../scripts/motion/heroData";
+  import { initParticleTitle } from "../scripts/motion/particleTitle";
   initHome();
   // Hero headline letters: entrance wave + cursor ripple (skipped under
   // reduced motion; the headline then stays plain text).
   if (window.matchMedia("(prefers-reduced-motion: no-preference)").matches) {
-    initHeroTitle();
+    // Particle headline; the letter-wave headline is the fallback.
+    if (!initParticleTitle()) initHeroTitle();
     initHeroGradients();
     initHeroData();
   }
@@ -335,7 +345,7 @@ const schema = [
   /* HERO */
   .hero { position: relative; background: var(--navy-900); color: #fff; padding-top: 150px; margin-top: -76px; overflow: hidden; }
   .hero-bg { position: absolute; inset: 0; pointer-events: none; }
-  .glow { position: absolute; border-radius: 50%; filter: blur(20px); }
+  .glow { position: absolute; border-radius: 50%; }
   .glow-a { width: 900px; height: 900px; left: 50%; top: 260px; transform: translateX(-50%); background: radial-gradient(circle, rgb(37 99 235 / 0.55), transparent 62%); }
   .glow-b { width: 600px; height: 600px; right: -160px; top: -200px; background: radial-gradient(circle, rgb(45 212 191 / 0.18), transparent 65%); }
   .glow-c { width: 520px; height: 520px; left: -180px; top: 120px; background: radial-gradient(circle, rgb(45 212 191 / 0.14), transparent 65%); opacity: 0.6; }
@@ -350,6 +360,16 @@ const schema = [
     background-image: linear-gradient(rgb(94 234 212 / 0.24) 1px, transparent 1px), linear-gradient(90deg, rgb(94 234 212 / 0.24) 1px, transparent 1px); background-size: 64px 64px;
     -webkit-mask-image: radial-gradient(240px circle at var(--hx, 50%) var(--hy, 50%), #000, transparent 70%); mask-image: radial-gradient(240px circle at var(--hx, 50%) var(--hy, 50%), #000, transparent 70%); }
   .hero.is-lit .grid-hot { opacity: 1; }
+  /* PARTICLE HEADLINE (particleTitle.ts). The h1 stays in the page but is
+     see-through while the particles draw it. If the script never starts, the
+     headline fades in by itself after a moment. */
+  @media (prefers-reduced-motion: no-preference) {
+    :global(html.js) .hero h1[data-particle-title] { opacity: 0; animation: pt-fallback 0.6s ease 2.5s forwards; }
+    :global(html.js) .hero h1[data-particle-title].pt-live { animation: none; opacity: 0; }
+    :global(html.js) .hero h1[data-particle-title].pt-off { animation: none; opacity: 1; }
+  }
+  @keyframes pt-fallback { to { opacity: 1; } }
+  :global(.pt-canvas) { position: absolute; left: 0; top: 0; width: 100%; pointer-events: none; }
   .hero-copy { position: relative; text-align: center; display: grid; justify-items: center; gap: 26px; }
   .hero-eyebrow { color: var(--brand-400); }
   .hero h1 { max-width: 15ch; }

@@ -69,3 +69,11 @@ mm.add(
 - `CostTicker.astro` and `ProfitPlayground.astro` use only figures and costs the
   released app really handles; the playground uses the same illustrative store as
   the revenue-to-profit scene and says sales are held constant.
+- Keep animated SVG children (pulses, filters) out of the hero: they repaint the
+  whole layer every frame. Do not put `filter: blur()` on large animated
+  gradients; the gradients are already soft.
+- Particle headline (`scripts/motion/particleTitle.ts`): the home `<h1>` is drawn
+  by particles that assemble on load and morph through the slogans in
+  `heroPhrases` (index.astro). The real `<h1>` stays in the page (transparent
+  while the canvas draws it; it fades back in if the script never starts) and
+  reduced motion shows it as plain text. Slogans must be claims the app supports.

@@ -12,16 +12,18 @@ export function initHeroData() {
 
   const revenue = hero.querySelector<SVGPathElement>(".hc-revenue");
   const profit = hero.querySelector<SVGPathElement>(".hc-profit");
+  const profitGlow = hero.querySelector<SVGPathElement>(".hc-profit-glow");
   const area = hero.querySelector<SVGPathElement>(".hc-area");
   const end = hero.querySelector<SVGGElement>(".hc-end");
-  if (revenue && profit && area && end) {
+  if (revenue && profit && profitGlow && area && end) {
     // pathLength="1" lets one dash value draw any path.
-    gsap.set([revenue, profit], { strokeDasharray: 1, strokeDashoffset: 1 });
+    gsap.set([revenue, profit, profitGlow], { strokeDasharray: 1, strokeDashoffset: 1 });
     gsap.set(area, { opacity: 0 });
     gsap.set(end, { opacity: 0 });
     gsap.timeline({ defaults: { ease: "power2.inOut" }, delay: 0.25 })
       .to(revenue, { strokeDashoffset: 0, duration: 2.2 }, 0)
       .to(profit, { strokeDashoffset: 0, duration: 2.4 }, 0.15)
+      .to(profitGlow, { strokeDashoffset: 0, duration: 2.4 }, 0.15)
       .to(area, { opacity: 1, duration: 1.6, ease: "power1.out" }, 1.2)
       .to(end, { opacity: 1, duration: 0.5 }, 2.4);
   }
