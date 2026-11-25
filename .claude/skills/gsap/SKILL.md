@@ -72,8 +72,15 @@ mm.add(
 - Keep animated SVG children (pulses, filters) out of the hero: they repaint the
   whole layer every frame. Do not put `filter: blur()` on large animated
   gradients; the gradients are already soft.
-- Particle headline (`scripts/motion/particleTitle.ts`): the home `<h1>` is drawn
-  by particles that assemble on load and morph through the slogans in
-  `heroPhrases` (index.astro). The real `<h1>` stays in the page (transparent
-  while the canvas draws it; it fades back in if the script never starts) and
-  reduced motion shows it as plain text. Slogans must be claims the app supports.
+- Home hero (`scripts/motion/heroScene.ts`): a deep perspective "living economy"
+  (drifting floor grid, distant breathing chart-bar skyline, transaction pulses,
+  dust) and a headline built from particles that fly in from depth. Once formed,
+  a crisp DOM copy of the line fades in on top for legibility; changes dissolve
+  the text, sweep particles back into depth left to right and re-form the next
+  slogan from `heroPhrases` (index.astro). The real `<h1>` stays in the page
+  (transparent while this runs; it fades back in if the script never starts).
+  Slogans must be claims the app supports.
+- Intro (`components/IntroLoader.astro`): animates the real logo SVG (ring, bars,
+  Audiowide wordmark as paths), once per session, then fires
+  `optifin:intro-done`; the hero starts on that event. Skipped under reduced
+  motion; a CSS timeout removes it if the script never runs.

@@ -12,7 +12,8 @@ gsap.registerPlugin(ScrollTrigger);
 let lenis: Lenis | null = null;
 
 export function initSmoothScroll() {
-  if (lenis || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return null;
+  if (lenis) return lenis;
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return null;
 
   lenis = new Lenis({
     lerp: 0.11, // lower = floatier; 0.11 feels smooth without lagging behind the hand

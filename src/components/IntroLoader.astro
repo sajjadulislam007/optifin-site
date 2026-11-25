@@ -1,0 +1,97 @@
+---
+// Cinematic intro for the home page, shown once per browser session.
+// It animates the real logo (ring + bars + the Audiowide wordmark, which the
+// SVG carries as paths), then pushes it towards the camera and fades into the
+// hero, and tells the hero scene to start ("optifin:intro-done").
+// Skipped without JavaScript, under reduced motion and after the first visit
+// in a session; a CSS timeout removes it even if the script never runs.
+import Logo from "./Logo.astro";
+---
+<script is:inline>
+  (function () {
+    var d = document.documentElement, seen = false;
+    try { seen = sessionStorage.getItem("ofIntro") === "1"; } catch (e) {}
+    if (seen || matchMedia("(prefers-reduced-motion: reduce)").matches) d.classList.add("skip-intro");
+    else d.classList.add("intro-on");
+  })();
+</script>
+<div class="intro" data-intro aria-hidden="true">
+  <div class="intro-glow"></div>
+  <div class="intro-mark" data-intro-mark>
+    <Logo tone="dark" size={64} />
+    <span class="intro-line"><span data-intro-progress></span></span>
+  </div>
+</div>
+
+<script>
+  import { gsap } from "gsap";
+  import { getLenis, initSmoothScroll } from "../scripts/motion/smooth";
+
+  const root = document.querySelector<HTMLElement>("[data-intro]");
+  const html = document.documentElement;
+  const done = () => {
+    html.classList.remove("intro-on");
+    html.classList.add("skip-intro");
+    getLenis()?.start();
+    window.dispatchEvent(new Event("optifin:intro-done"));
+    root?.remove();
+  };
+
+  if (!root || !html.classList.contains("intro-on")) {
+    root?.remove();
+  } else {
+    try { sessionStorage.setItem("ofIntro", "1"); } catch {}
+    initSmoothScroll()?.stop(); // pause scrolling under the intro
+    const svg = root.querySelector("svg")!;
+    const ring = svg.querySelector<SVGPathElement>('g[stroke] path');
+    const bars = svg.querySelectorAll<SVGRectElement>("rect");
+    const word = svg.querySelector<SVGGElement>('g[transform^="translate"]');
+    const mark = root.querySelector<HTMLElement>("[data-intro-mark]");
+    const progress = root.querySelector<HTMLElement>("[data-intro-progress]");
+
+    // Wordmark revealed by a clip that sweeps left to right.
+    const ns = "http://www.w3.org/2000/svg";
+    const clip = document.createElementNS(ns, "clipPath");
+    clip.id = "intro-wipe";
+    const wipe = document.createElementNS(ns, "rect");
+    wipe.setAttribute("x", "0"); wipe.setAttribute("y", "-80");
+    wipe.setAttribute("width", "0"); wipe.setAttribute("height", "120");
+    clip.append(wipe);
+    svg.querySelector("defs")?.append(clip);
+    word?.setAttribute("clip-path", "url(#intro-wipe)");
+
+    if (ring) {
+      const len = ring.getTotalLength();
+      gsap.set(ring, { strokeDasharray: len, strokeDashoffset: len });
+    }
+    gsap.set(bars, { scaleY: 0, transformOrigin: "50% 100%" });
+
+    gsap.timeline({ onComplete: done })
+      .to(mark, { autoAlpha: 1, scale: 1, duration: 0.8, ease: "power3.out" }, 0)
+      .to(ring, { strokeDashoffset: 0, duration: 1.05, ease: "power2.inOut" }, 0.1)
+      .to(bars, { scaleY: 1, duration: 0.6, ease: "back.out(1.7)", stagger: 0.09 }, 0.45)
+      .to(wipe, { attr: { width: 340 }, duration: 0.85, ease: "power2.inOut" }, 0.75)
+      .to(progress, { scaleX: 1, duration: 1.2, ease: "power1.inOut" }, 0.5)
+      .to(root.querySelector(".intro-line"), { autoAlpha: 0, duration: 0.3 }, 1.75)
+      // Push through: the logo flies at the camera and the veil lifts.
+      .to(mark, { scale: 2.4, autoAlpha: 0, filter: "blur(10px)", duration: 0.75, ease: "power3.in" }, 1.95)
+      .to(root, { autoAlpha: 0, duration: 0.7, ease: "power2.inOut" }, 2.15);
+  }
+</script>
+
+<style>
+  .intro { display: none; }
+  :global(html.js.intro-on) .intro {
+    display: grid; place-items: center; position: fixed; inset: 0; z-index: 200;
+    background: radial-gradient(ellipse at 50% 55%, #0d1f3a 0%, #071529 45%, #050d1c 100%);
+    /* Safety net: gone after 6s even if the script never runs. */
+    animation: intro-failsafe 0.5s ease 6s forwards;
+  }
+  .intro-glow { position: absolute; width: 60vmax; height: 60vmax; border-radius: 50%;
+    background: radial-gradient(circle, rgb(37 99 235 / 0.28), transparent 60%); }
+  .intro-mark { position: relative; display: grid; justify-items: center; gap: 26px; opacity: 0; transform: scale(0.92); will-change: transform, opacity; }
+  .intro-mark :global(svg) { height: clamp(40px, 7vw, 64px); width: auto; overflow: visible; }
+  .intro-line { display: block; width: clamp(120px, 18vw, 200px); height: 2px; border-radius: 2px; background: rgb(255 255 255 / 0.08); overflow: hidden; }
+  .intro-line span { display: block; height: 100%; background: linear-gradient(90deg, #2dd4bf, #3b82f6); transform: scaleX(0); transform-origin: left; }
+  @keyframes intro-failsafe { to { opacity: 0; visibility: hidden; } }
+</style>
