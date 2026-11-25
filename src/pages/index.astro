@@ -358,14 +358,6 @@ const schema = [
   @keyframes pt-fallback { to { opacity: 1; } }
   :global(.hs-canvas) { position: absolute; left: 0; top: 0; width: 100%; pointer-events: none;
     -webkit-mask-image: linear-gradient(#000 70%, transparent); mask-image: linear-gradient(#000 70%, transparent); }
-  /* Crisp copy of the current line: fades in once the particles have formed it. */
-  :global(.hs-text) { position: absolute; left: 0; top: 0; width: 100%; pointer-events: none; color: #fff;
-    opacity: 0; filter: blur(12px); transform: scale(0.985); transition: opacity 1s ease, filter 1s ease, transform 1.2s cubic-bezier(.2,.7,.2,1);
-    text-shadow: 0 0 40px rgb(56 189 248 / 0.25); }
-  :global(.hs-text.is-on) { opacity: 1; filter: blur(0); transform: none; }
-  :global(.hs-line) { position: absolute; transform: translateX(-50%); white-space: nowrap; }
-  :global(.hs-accent) { background-image: linear-gradient(90deg, #2dd4bf, #38bdf8, #3b82f6); background-repeat: no-repeat;
-    -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: none; }
   .hero-copy { position: relative; text-align: center; display: grid; justify-items: center; gap: 26px; }
   .hero-eyebrow { color: var(--brand-400); }
   .hero h1 { max-width: 15ch; }

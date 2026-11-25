@@ -72,11 +72,13 @@ mm.add(
 - Keep animated SVG children (pulses, filters) out of the hero: they repaint the
   whole layer every frame. Do not put `filter: blur()` on large animated
   gradients; the gradients are already soft.
-- Home hero (`scripts/motion/heroScene.ts`): a deep perspective "living economy"
-  (drifting floor grid, distant breathing chart-bar skyline, transaction pulses,
-  dust) and a headline built from particles that fly in from depth. Once formed,
-  a crisp DOM copy of the line fades in on top for legibility; changes dissolve
-  the text, sweep particles back into depth left to right and re-form the next
+- Home hero (`scripts/motion/heroScene.ts`): a live glowing growth chart in the
+  background (bars with light columns and reflections that scroll as new bars
+  grow in, a rising trend line with nodes, counting labels, an arrowhead and
+  sparks, bokeh), dimmer behind the headline. Labels are abstract numbers, never
+  currency. The headline is built only from particles that fly in from depth;
+  the settled particles are the finished text (no second, crisp-text step).
+  Changes sweep particles back into depth left to right and re-form the next
   slogan from `heroPhrases` (index.astro). The real `<h1>` stays in the page
   (transparent while this runs; it fades back in if the script never starts).
   Slogans must be claims the app supports.

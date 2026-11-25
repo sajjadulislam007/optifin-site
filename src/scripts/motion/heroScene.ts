@@ -1,42 +1,42 @@
-// Home hero scene: a deep, slow "living economy" and a headline built from
-// particles that arrive from far behind it.
+// Home hero scene: a live, glowing growth chart in the background and a
+// headline built from particles that fly in from deep behind it.
 //
-// Background (all drawn in perspective on one canvas, very slowly):
-//  - a floor grid drifting towards the viewer, fading into the horizon,
-//  - a distant skyline of chart bars whose heights breathe,
-//  - pulses of light travelling across the floor like transactions,
-//  - dust floating at different depths.
-//  The cursor sways the camera a little, so the depth reads.
+// Background (one canvas, slow and continuous):
+//  - glowing bars with light columns and floor reflections; the chart scrolls
+//    slowly as new bars grow in from the right,
+//  - a rising trend line through the bar tops, with glowing nodes, value
+//    labels that count, an arrowhead and sparks travelling along it,
+//  - soft bokeh lights drifting upward and a bright floor line.
+//  It is dimmer in the middle, behind the headline, and brighter at the sides.
+//  The figures are abstract (no currency, no axis), so they are not claims.
 //
-// Headline: particles fly in from deep behind the hero and settle into the
-// words. Once they land, crisp real text fades in on top (so it is easy to
-// read) and the particles shimmer underneath. Each change dissolves the text,
-// sends the particles back into the depth in a left-to-right wave and brings
-// them forward again as the next line.
+// Headline: particles fly in from depth and settle into the words; that
+// settled state is the finished text (tightly packed, softly glowing). Each
+// change sends the particles back into depth in a left-to-right wave and
+// brings them forward as the next line.
 //
 // The real <h1> stays in the page (transparent while this runs) for search
-// engines and screen readers; the canvas and the visible text copy are
-// aria-hidden. Reduced motion: returns false and the plain <h1> shows.
-// Slogans come from data-phrases on the <h1>: [{ "t": "plain", "a": "accent" }]
-// and must be claims the released app supports.
+// engines and screen readers; the canvas is aria-hidden. Reduced motion:
+// returns false and the plain <h1> shows. Slogans come from data-phrases on
+// the <h1> ([{ "t": "plain", "a": "accent" }]) and must be claims the released
+// app supports.
 
 interface Phrase { t: string; a: string }
 interface Target { x: number; y: number; c: number }
 interface Line { words: { text: string; accent: boolean }[]; y: number }
 interface P {
   ax: number; ay: number; az: number; // path start
-  mx: number; my: number; mz: number; // path control point (deep)
-  bx: number; by: number;             // path end, on the text plane (z = 0)
+  mx: number; my: number; mz: number; // control point (deep)
+  bx: number; by: number;             // end, on the text plane
   t0: number; dur: number;            // ms on the scene clock
   c: number; nc: number;              // colour index now / after the move
   ph: number;                         // shimmer phase
 }
 
-const HOLD_FIRST = 9000; // ms the headline stays readable
-const HOLD = 6500;       // ms each slogan stays readable
+const HOLD_FIRST = 9000; // ms the headline stays
+const HOLD = 6500;       // ms each slogan stays
 const ACCENT = ["#2dd4bf", "#38bdf8", "#3b82f6"];
 const TAU = Math.PI * 2;
-
 const easeInOut = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 const easeOut = (t: number) => 1 - Math.pow(1 - t, 4);
 
@@ -54,11 +54,6 @@ export function initHeroScene(): boolean {
   canvas.className = "hs-canvas";
   canvas.setAttribute("aria-hidden", "true");
   copy.before(canvas);
-  // The readable copy of the current line, drawn by the browser.
-  const textLayer = document.createElement("div");
-  textLayer.className = "hs-text";
-  textLayer.setAttribute("aria-hidden", "true");
-  copy.before(textLayer);
   title.classList.add("pt-live");
 
   const accentEl = title.querySelector(".gradient-text");
@@ -69,19 +64,19 @@ export function initHeroScene(): boolean {
   const phrases: Phrase[] = [{ t: plain, a: accent }, ...extra];
 
   const small = window.matchMedia("(max-width: 700px)").matches;
-  const MAX = small ? 1500 : 3600;
+  const MAX = small ? 2600 : 8000;
 
   let w = 0, h = 0, dpr = 1;
   let box = { left: 0, top: 0, width: 0, height: 0 };
   let font = { px: 60, lh: 64, ls: 0, css: "" };
   let palette: string[] = [];
+  let glowColour: string[] = [];
   let targets: Target[][] = [];
-  let lines: Line[][] = [];
   let dot = 1.2;
   const parts: P[] = [];
   let current = 0;
 
-  // ---- text layout ------------------------------------------------------------
+  // ---- text layout and sampling --------------------------------------------------
   const readFont = () => {
     const cs = getComputedStyle(title);
     const px = parseFloat(cs.fontSize);
@@ -92,7 +87,7 @@ export function initHeroScene(): boolean {
     ...p.a.split(/\s+/).filter(Boolean).map((text) => ({ text, accent: true })),
   ];
   // Greedy wrap, then narrow while the line count holds (balanced lines).
-  const wrap = (p: Phrase, measure: (s: string) => number, space: number) => {
+  const wrap = (p: Phrase, measure: (s: string) => number, space: number): Line[] => {
     const list = splitWords(p);
     const run = (limit: number) => {
       const out: { text: string; accent: boolean }[][] = [[]];
@@ -123,20 +118,19 @@ export function initHeroScene(): boolean {
     probe.font = font.css;
     if ("letterSpacing" in probe) (probe as CanvasRenderingContext2D & { letterSpacing: string }).letterSpacing = `${font.ls}px`;
     probe.textBaseline = "alphabetic";
-    probe.textAlign = "left";
     const measure = (s: string) => probe.measureText(s).width;
     const space = measure(" ") + font.ls;
-    // CSS centres the font's ascent+descent box inside the line height; do the same.
     const m = probe.measureText("Hg");
     const asc = m.fontBoundingBoxAscent ?? font.px * 0.8, desc = m.fontBoundingBoxDescent ?? font.px * 0.2;
-    const baseline = (lh: number) => (lh - (asc + desc)) / 2 + asc;
+    const baseline = (font.lh - (asc + desc)) / 2 + asc; // where CSS puts the baseline in a line box
     const grad = probe.createLinearGradient(box.left, 0, box.left + box.width, 0);
     ACCENT.forEach((c, i) => grad.addColorStop(i / (ACCENT.length - 1), c));
     const cx = box.left + box.width / 2;
 
-    let step = Math.max(3, Math.round(font.px / 24));
+    let step = Math.max(2, Math.round(font.px / 30));
     const colourIndex = new Map<string, number>();
     palette = [];
+    glowColour = [];
     const sample = (rows: Line[], s: number) => {
       probe.clearRect(0, 0, w, h);
       for (const row of rows) {
@@ -144,7 +138,7 @@ export function initHeroScene(): boolean {
         let x = cx - lineW / 2;
         for (const wd of row.words) {
           probe.fillStyle = wd.accent ? grad : "#ffffff";
-          probe.fillText(wd.text, x, row.y - font.lh / 2 + baseline(font.lh));
+          probe.fillText(wd.text, x, row.y - font.lh / 2 + baseline);
           x += measure(wd.text) + space;
         }
       }
@@ -153,61 +147,31 @@ export function initHeroScene(): boolean {
       for (let y = 0; y < h; y += s) {
         for (let x = 0; x < w; x += s) {
           const i = (y * w + x) * 4;
-          if (data[i + 3] < 150) continue;
+          if (data[i + 3] < 128) continue;
           const r = data[i] & 0xf0, g = data[i + 1] & 0xf0, b = data[i + 2] & 0xf0;
           const key = `${r},${g},${b}`;
           let c = colourIndex.get(key);
-          if (c === undefined) { c = palette.length; palette.push(`rgb(${r + 8},${g + 8},${b + 8})`); colourIndex.set(key, c); }
-          out.push({ x: x + (Math.random() - 0.5) * s * 0.6, y: y + (Math.random() - 0.5) * s * 0.6, c });
+          if (c === undefined) {
+            c = palette.length;
+            palette.push(`rgb(${r + 8},${g + 8},${b + 8})`);
+            glowColour.push(`rgba(${r + 8},${g + 8},${b + 8},0.55)`);
+            colourIndex.set(key, c);
+          }
+          out.push({ x: x + (Math.random() - 0.5) * s * 0.3, y: y + (Math.random() - 0.5) * s * 0.3, c });
         }
       }
-      // Left-to-right order, so a particle moves to the same part of the next line.
-      return out.sort((a, b) => a.x - b.x || a.y - b.y);
+      return out.sort((a, b) => a.x - b.x || a.y - b.y); // left to right, for tidy morphs
     };
-    lines = phrases.map((p) => wrap(p, measure, space));
+    const lines = phrases.map((p) => wrap(p, measure, space));
     for (;;) {
       targets = lines.map((rows) => sample(rows, step));
       if (Math.max(...targets.map((t) => t.length)) <= MAX || step > 9) break;
       step += 1;
     }
-    dot = Math.max(0.9, step * 0.36);
-  };
-
-  // Visible copy of a line, centred exactly like the sampled text.
-  const showText = (n: number) => {
-    textLayer.innerHTML = "";
-    textLayer.style.font = font.css;
-    textLayer.style.letterSpacing = `${font.ls}px`;
-    const cx = box.left + box.width / 2;
-    for (const row of lines[n]) {
-      const el = document.createElement("div");
-      el.className = "hs-line";
-      el.style.top = `${row.y - font.lh / 2}px`;
-      el.style.height = el.style.lineHeight = `${font.lh}px`;
-      el.style.left = `${cx}px`;
-      row.words.forEach((wd, i) => {
-        if (i) el.append(" ");
-        const span = document.createElement("span");
-        span.textContent = wd.text;
-        if (wd.accent) span.className = "hs-accent";
-        el.append(span);
-      });
-      textLayer.append(el);
-    }
-    // One gradient across the whole headline width, like the particles.
-    requestAnimationFrame(() => {
-      const lb = textLayer.getBoundingClientRect();
-      textLayer.querySelectorAll<HTMLElement>(".hs-accent").forEach((s) => {
-        const r = s.getBoundingClientRect();
-        s.style.backgroundSize = `${box.width}px 100%`;
-        s.style.backgroundPosition = `${-(r.left - lb.left - box.left)}px 0`;
-      });
-    });
+    dot = Math.max(0.8, step * 0.6); // tight enough that letters read as solid shapes
   };
 
   // ---- particle paths ------------------------------------------------------------
-  // Each particle follows a curve: start → control point → end. The control
-  // point sits deep in the scene, so moves sweep back into the distance.
   const vp = () => ({ x: box.left + box.width / 2, y: box.top + box.height / 2 });
 
   const intro = (now: number) => {
@@ -217,9 +181,7 @@ export function initHeroScene(): boolean {
     parts.forEach((p, i) => {
       const s = t[Math.floor((i * t.length) / parts.length)];
       const z = 2400 + Math.random() * 2600;
-      const sx = s.x + (Math.random() - 0.5) * w * 0.5;
-      const sy = s.y + (Math.random() - 0.5) * h * 0.5;
-      p.ax = sx; p.ay = sy; p.az = z;
+      p.ax = s.x + (Math.random() - 0.5) * w * 0.5; p.ay = s.y + (Math.random() - 0.5) * h * 0.5; p.az = z;
       p.mx = v.x + (s.x - v.x) * 0.6; p.my = v.y + (s.y - v.y) * 0.6; p.mz = z * 0.3;
       p.bx = s.x; p.by = s.y;
       p.c = p.nc = s.c;
@@ -250,117 +212,159 @@ export function initHeroScene(): boolean {
     return last;
   };
 
-  // ---- the living economy (background) -------------------------------------------
-  const F = () => h * 1.15;
-  const bars = Array.from({ length: 110 }, (_, i) => ({
-    x: (i - 55) * 64 + (Math.random() - 0.5) * 20,
-    base: 40 + Math.random() * 300 * (1 - Math.abs(i - 55) / 80),
-    amp: 0.12 + Math.random() * 0.22,
-    ph: Math.random() * TAU,
-    sp: 0.00012 + Math.random() * 0.0002,
-    c: Math.random() < 0.55 ? [45, 212, 191] : [59, 130, 246],
+  // ---- background: the live growth chart --------------------------------------
+  // A random walk with an upward drift; the chart shows a moving window of it.
+  const series: number[] = [];
+  let level = 20;
+  // Steady climb with noise, like the growth chart it imitates. Values are
+  // rebased now and then so they never grow without limit; labels are shown
+  // relative to the left edge, so rebasing is invisible.
+  const nextValue = () => { level = Math.max(1, level * (1 + 0.045 + (Math.random() - 0.45) * 0.11)); return level; };
+  for (let i = 0; i < 40; i++) series.push(nextValue());
+  const BAR_EVERY = 2600;   // ms between new bars
+  let scroll = 0;           // 0..1 progress towards the next bar
+  let scaleMax = Math.max(...series.slice(-30));
+  const sparks: { u: number; sp: number }[] = [];
+  let sparkClock = 0;
+  const bokeh = Array.from({ length: small ? 26 : 60 }, () => ({
+    x: Math.random(), y: Math.random(), r: 0.6 + Math.random() * 2.6, sp: 0.00002 + Math.random() * 0.00005, ph: Math.random() * TAU, a: 0.15 + Math.random() * 0.45,
   }));
-  const dust = Array.from({ length: small ? 70 : 150 }, () => ({
-    x: (Math.random() - 0.5) * 3200, y: -700 + Math.random() * 1000, z: 150 + Math.random() * 4000, r: 0.6 + Math.random() * 1.2,
-  }));
-  const pulses: { lane: number; z: number; sp: number; c: string }[] = [];
-  let pulseClock = 0;
+  const fmtNum = (n: number) => Math.round(n * 1000).toLocaleString("en-US");
 
-  const camera = { x: 0, y: 0, tx: 0, ty: 0 };
-  hero.addEventListener("pointermove", (e) => {
-    const r = hero.getBoundingClientRect();
-    camera.tx = ((e.clientX - r.left) / r.width - 0.5) * -60;
-    camera.ty = ((e.clientY - r.top) / r.height - 0.5) * -24;
-  }, { passive: true });
-  hero.addEventListener("pointerleave", () => { camera.tx = 0; camera.ty = 0; });
-
-  const drawWorld = (clock: number, dt: number) => {
-    const f = F();
-    const cx = w / 2 + camera.x;
-    const copyBottom = copy.offsetTop + copy.offsetHeight;
-    const horizon = Math.min(h - 40, copyBottom - 8) + camera.y;
-    const camH = 150;
-
-    // Skyline: distant chart bars that rise and fall slowly.
-    const zFar = 4200;
-    const s = f / zFar;
-    for (const b of bars) {
-      const hgt = b.base * (1 + Math.sin(clock * b.sp + b.ph) * b.amp) * s;
-      const x = cx + b.x * s;
-      const bw = 30 * s;
-      if (x < -bw || x > w + bw) continue;
-      const g = ctx.createLinearGradient(0, horizon - hgt, 0, horizon);
-      g.addColorStop(0, `rgba(${b.c[0]},${b.c[1]},${b.c[2]},0.13)`);
-      g.addColorStop(1, `rgba(${b.c[0]},${b.c[1]},${b.c[2]},0)`);
-      ctx.fillStyle = g;
-      ctx.fillRect(x - bw / 2, horizon - hgt, bw, hgt);
-      ctx.fillStyle = `rgba(${b.c[0]},${b.c[1]},${b.c[2]},0.32)`;
-      ctx.fillRect(x - bw / 2, horizon - hgt, bw, Math.max(1, 1.2));
+  const drawWorld = (clock: number, ms: number) => {
+    const visibleBars = small ? 14 : 26;
+    scroll += ms / BAR_EVERY;
+    if (scroll >= 1) {
+      scroll -= 1; series.push(nextValue()); if (series.length > 80) series.shift();
+      if (level > 1e6) { const k = 1e-3; for (let i = 0; i < series.length; i++) series[i] *= k; level *= k; scaleMax *= k; }
     }
-    // Horizon glow.
-    const hg = ctx.createLinearGradient(0, horizon - 40, 0, horizon + 40);
-    hg.addColorStop(0, "rgba(45,212,191,0)");
-    hg.addColorStop(0.5, "rgba(56,189,248,0.10)");
-    hg.addColorStop(1, "rgba(45,212,191,0)");
-    ctx.fillStyle = hg;
-    ctx.fillRect(0, horizon - 40, w, 80);
+    const view = series.slice(-(visibleBars + 2));
+    scaleMax += (Math.max(...view) * 1.08 - scaleMax) * 0.01; // the scale follows the data smoothly
 
-    // Floor grid drifting towards the viewer.
-    ctx.lineWidth = 1;
-    const near = 60, far = 4200, gap = 260;
-    const drift = (clock * 0.045) % gap;
-    for (let z = far - ((far - near) % gap) - drift; z > near; z -= gap) {
-      const y = horizon + (camH * f) / z;
-      if (y > h) continue;
-      const fade = Math.min(1, (y - horizon) / 90) * 0.13;
-      ctx.strokeStyle = `rgba(94,234,212,${fade.toFixed(3)})`;
-      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+    const base = Math.min(h - 12, copy.offsetTop + copy.offsetHeight + 46);
+    const top = box.top + box.height * 0.72; // peaks stay below the headline
+    const chartH = base - top;
+    const left = w * 0.02, right = w * 0.88;
+    const gap = (right - left) / (visibleBars - 1);
+    const xOf = (i: number) => left + (i - scroll) * gap;      // i = index in view
+    const growIn = Math.min(1, scroll * 3);                     // the newest bar grows up
+    const yOf = (v: number) => base - (v / scaleMax) * chartH;
+    // Dimmer in the middle, behind the headline.
+    const fade = (x: number) => { const d = Math.abs(x / w - 0.5) * 2; return 0.16 + 0.84 * Math.min(1, d * d * 1.8); };
+
+    // Floor line and glow.
+    const fl = ctx.createLinearGradient(0, 0, w, 0);
+    fl.addColorStop(0, "rgba(59,130,246,0)"); fl.addColorStop(0.5, "rgba(96,165,250,0.55)"); fl.addColorStop(1, "rgba(59,130,246,0)");
+    ctx.fillStyle = fl; ctx.fillRect(0, base, w, 1.5);
+    const fg = ctx.createLinearGradient(0, base - 30, 0, base + 40);
+    fg.addColorStop(0, "rgba(37,99,235,0)"); fg.addColorStop(0.45, "rgba(37,99,235,0.16)"); fg.addColorStop(1, "rgba(37,99,235,0)");
+    ctx.fillStyle = fg; ctx.fillRect(0, base - 30, w, 70);
+
+    // Bars, light columns and reflections.
+    const bw = Math.max(5, gap * 0.34);
+    view.forEach((v, i) => {
+      const x = xOf(i);
+      if (x < -gap || x > w + gap) return;
+      const isNew = i === view.length - 1;
+      const val = isNew ? v * growIn : v;
+      const y = yOf(val);
+      const a = fade(x) * (isNew ? growIn : 1);
+      const narrow = i % 3 === 1 ? 0.6 : 1;
+      const bwi = bw * narrow;
+      // Light column above the bar.
+      const col = ctx.createLinearGradient(0, top - 40, 0, y);
+      col.addColorStop(0, "rgba(56,189,248,0)"); col.addColorStop(1, `rgba(56,189,248,${(0.07 * a).toFixed(3)})`);
+      ctx.fillStyle = col; ctx.fillRect(x - bwi * 0.8, top - 40, bwi * 1.6, y - top + 40);
+      // The bar.
+      const g = ctx.createLinearGradient(0, y, 0, base);
+      g.addColorStop(0, `rgba(125,211,252,${(0.85 * a).toFixed(3)})`);
+      g.addColorStop(0.25, `rgba(59,130,246,${(0.55 * a).toFixed(3)})`);
+      g.addColorStop(1, `rgba(37,99,235,${(0.12 * a).toFixed(3)})`);
+      ctx.fillStyle = g; ctx.fillRect(x - bwi / 2, y, bwi, base - y);
+      ctx.fillStyle = `rgba(224,242,254,${(0.9 * a).toFixed(3)})`; ctx.fillRect(x - bwi / 2, y, bwi, 1.5);
+      // Reflection on the floor.
+      const rh = Math.min(46, (base - y) * 0.35);
+      const rg = ctx.createLinearGradient(0, base, 0, base + rh);
+      rg.addColorStop(0, `rgba(59,130,246,${(0.28 * a).toFixed(3)})`); rg.addColorStop(1, "rgba(59,130,246,0)");
+      ctx.fillStyle = rg; ctx.fillRect(x - bwi / 2, base + 2, bwi, rh);
+    });
+
+    // Trend line through the bar tops (the newest point eases in).
+    const pts: { x: number; y: number; v: number }[] = view.map((v, i) => {
+      const isNew = i === view.length - 1;
+      const prev = view[Math.max(0, i - 1)];
+      const val = isNew ? prev + (v - prev) * growIn : v;
+      return { x: xOf(i), y: yOf(val) - 18, v: val };
+    });
+    ctx.save();
+    ctx.lineWidth = 2.2;
+    ctx.lineJoin = "round";
+    ctx.shadowColor = "rgba(96,165,250,0.9)";
+    ctx.shadowBlur = 12;
+    const lg = ctx.createLinearGradient(0, 0, w, 0);
+    lg.addColorStop(0, "rgba(147,197,253,0.15)"); lg.addColorStop(0.45, "rgba(147,197,253,0.35)"); lg.addColorStop(1, "rgba(224,242,254,0.95)");
+    ctx.strokeStyle = lg;
+    ctx.beginPath();
+    pts.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)));
+    ctx.stroke();
+    // Nodes and labels.
+    ctx.font = `600 ${small ? 10 : 12}px ${getComputedStyle(document.body).fontFamily}`;
+    ctx.textAlign = "center";
+    pts.forEach((p, i) => {
+      if (p.x < 0 || p.x > w) return;
+      const a = fade(p.x);
+      if (i % 2 === 0 || i === pts.length - 1) {
+        ctx.fillStyle = `rgba(224,242,254,${(0.9 * a).toFixed(3)})`;
+        ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, TAU); ctx.fill();
+      }
+      if (i % 5 === 3 || i === pts.length - 2) {
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = `rgba(191,219,254,${(0.7 * a).toFixed(3)})`;
+        ctx.fillText(fmtNum((p.v / view[0]) * 12.4), p.x, p.y - 14);
+        ctx.shadowBlur = 12;
+      }
+    });
+    // Arrowhead on the newest point.
+    const e = pts[pts.length - 1], d = pts[pts.length - 2];
+    if (e && d) {
+      const ang = Math.atan2(e.y - d.y, e.x - d.x);
+      const L = small ? 14 : 22;
+      ctx.fillStyle = "rgba(240,249,255,0.95)";
+      ctx.shadowColor = "rgba(147,197,253,1)";
+      ctx.shadowBlur = 22;
+      ctx.beginPath();
+      ctx.moveTo(e.x + Math.cos(ang) * L, e.y + Math.sin(ang) * L);
+      ctx.lineTo(e.x + Math.cos(ang + 2.5) * L * 0.75, e.y + Math.sin(ang + 2.5) * L * 0.75);
+      ctx.lineTo(e.x + Math.cos(ang - 2.5) * L * 0.75, e.y + Math.sin(ang - 2.5) * L * 0.75);
+      ctx.closePath(); ctx.fill();
     }
-    for (let k = -16; k <= 16; k++) {
-      const X = k * 220;
-      const x1 = cx + (X * f) / far, y1 = horizon + (camH * f) / far;
-      const x2 = cx + (X * f) / near, y2 = horizon + (camH * f) / near;
-      const g = ctx.createLinearGradient(0, y1, 0, Math.min(h, y2));
-      g.addColorStop(0, "rgba(59,130,246,0)");
-      g.addColorStop(1, "rgba(59,130,246,0.14)");
-      ctx.strokeStyle = g;
-      ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+    ctx.restore();
+
+    // Sparks travelling along the line towards the arrow.
+    sparkClock += ms;
+    if (sparkClock > 700 && sparks.length < 6) { sparkClock = 0; sparks.push({ u: 0, sp: 0.00012 + Math.random() * 0.00008 }); }
+    for (let i = sparks.length - 1; i >= 0; i--) {
+      const s = sparks[i];
+      s.u += s.sp * ms;
+      if (s.u >= 1) { sparks.splice(i, 1); continue; }
+      const f = s.u * (pts.length - 1);
+      const k = Math.floor(f), t = f - k;
+      const p0 = pts[k], p1 = pts[Math.min(pts.length - 1, k + 1)];
+      const x = p0.x + (p1.x - p0.x) * t, y = p0.y + (p1.y - p0.y) * t;
+      const g = ctx.createRadialGradient(x, y, 0, x, y, 10);
+      g.addColorStop(0, `rgba(240,249,255,${(0.9 * fade(x)).toFixed(3)})`); g.addColorStop(1, "rgba(96,165,250,0)");
+      ctx.fillStyle = g; ctx.fillRect(x - 10, y - 10, 20, 20);
     }
 
-    // Transactions: pulses running along the floor towards the viewer.
-    pulseClock += dt * 16.667;
-    if (pulseClock > 900 && pulses.length < 12) {
-      pulseClock = 0;
-      pulses.push({ lane: (Math.floor(Math.random() * 25) - 12) * 220, z: far, sp: 3 + Math.random() * 3, c: Math.random() < 0.6 ? "94,234,212" : "96,165,250" });
-    }
-    for (let i = pulses.length - 1; i >= 0; i--) {
-      const p = pulses[i];
-      p.z -= p.sp * dt;
-      if (p.z < near + 20) { pulses.splice(i, 1); continue; }
-      const zt = Math.min(far, p.z + 420);
-      const xa = cx + (p.lane * f) / p.z, ya = horizon + (camH * f) / p.z;
-      const xb = cx + (p.lane * f) / zt, yb = horizon + (camH * f) / zt;
-      if (ya > h + 20) continue;
-      const a = Math.min(1, (far - p.z) / 900) * 0.7;
-      const g = ctx.createLinearGradient(xb, yb, xa, ya);
-      g.addColorStop(0, `rgba(${p.c},0)`);
-      g.addColorStop(1, `rgba(${p.c},${a.toFixed(3)})`);
-      ctx.strokeStyle = g;
-      ctx.lineWidth = Math.max(1, (2.2 * f) / p.z * 6);
-      ctx.beginPath(); ctx.moveTo(xb, yb); ctx.lineTo(xa, ya); ctx.stroke();
-    }
-    ctx.lineWidth = 1;
-
-    // Dust at many depths, drifting slowly forward.
-    for (const d of dust) {
-      d.z -= 0.55 * dt;
-      if (d.z < 120) { d.z = 4200; d.x = (Math.random() - 0.5) * 3200; }
-      const k = f / d.z;
-      const x = cx + d.x * k, y = horizon + d.y * k;
-      if (x < 0 || x > w || y < 0 || y > h) continue;
-      const a = Math.min(0.55, (1 - d.z / 4200) * 0.6);
-      ctx.fillStyle = `rgba(148,197,253,${a.toFixed(3)})`;
-      ctx.fillRect(x, y, d.r * k * 1.4 + 0.4, d.r * k * 1.4 + 0.4);
+    // Bokeh drifting upward.
+    for (const b of bokeh) {
+      b.y -= b.sp * ms;
+      if (b.y < -0.05) { b.y = 1.05; b.x = Math.random(); }
+      const x = b.x * w + Math.sin(clock * 0.0003 + b.ph) * 12;
+      const y = b.y * h;
+      const tw = 0.6 + 0.4 * Math.sin(clock * 0.0012 + b.ph);
+      ctx.fillStyle = `rgba(147,197,253,${(b.a * tw * fade(x)).toFixed(3)})`;
+      ctx.beginPath(); ctx.arc(x, y, b.r, 0, TAU); ctx.fill();
     }
   };
 
@@ -370,46 +374,38 @@ export function initHeroScene(): boolean {
   let last = performance.now();
   let clock = 0;
   let started = false;
-  let landAt = Infinity;   // when the current line has formed
-  let nextAt = Infinity;   // when to start the next change
-  let textOn = false;
-  let glow = 1;            // particle brightness; dims while the crisp text shows
+  let landAt = Infinity;
+  let nextAt = Infinity;
+  let landed = false;
+  let xs = new Float32Array(0);
 
   const frame = (now: number) => {
     raf = requestAnimationFrame(frame);
     const ms = Math.min(now - last, 50);
-    const dt = ms / 16.667;
     last = now;
     clock += ms;
-    camera.x += (camera.tx - camera.x) * 0.03;
-    camera.y += (camera.ty - camera.y) * 0.03;
 
     if (started) {
-      if (!textOn && clock >= landAt) {
-        textOn = true;
-        textLayer.classList.add("is-on");
+      if (!landed && clock >= landAt) {
+        landed = true;
         nextAt = clock + (current === 0 ? HOLD_FIRST : HOLD);
-      } else if (textOn && clock >= nextAt && phrases.length > 1) {
-        textOn = false;
-        textLayer.classList.remove("is-on");
+      } else if (landed && clock >= nextAt && phrases.length > 1) {
+        landed = false;
         const n = (current + 1) % phrases.length;
-        const begin = clock + 420; // let the text fade before the particles move
-        landAt = morph(begin, n);
+        landAt = morph(clock, n);
         current = n;
-        window.setTimeout(() => showText(n), 700);
       }
     }
-    glow += ((textOn ? 0.16 : 1) - glow) * 0.04;
 
     ctx.clearRect(0, 0, w, h);
-    drawWorld(clock, dt);
+    drawWorld(clock, ms);
     if (!started) return;
 
     // Text particles, projected from depth.
     const v = vp();
-    const f = F();
+    const f = h * 1.15;
     for (const b of buckets) b.length = 0;
-    const xs = new Float32Array(parts.length * 3);
+    if (xs.length < parts.length * 3) xs = new Float32Array(parts.length * 3);
     for (let i = 0; i < parts.length; i++) {
       const p = parts[i];
       const raw = (clock - p.t0) / p.dur;
@@ -420,8 +416,8 @@ export function initHeroScene(): boolean {
       const z = a * p.az + b2 * p.mz;
       if (u >= 1) {
         p.c = p.nc;
-        x += Math.sin(clock * 0.0016 + p.ph) * 0.5;
-        y += Math.cos(clock * 0.0021 + p.ph) * 0.5;
+        x += Math.sin(clock * 0.0014 + p.ph) * 0.3;
+        y += Math.cos(clock * 0.0019 + p.ph) * 0.3;
       } else if (u > 0.5) p.c = p.nc;
       const k = f / (f + z);
       xs[i * 3] = v.x + (x - v.x) * k;
@@ -433,9 +429,11 @@ export function initHeroScene(): boolean {
       const list = buckets[c];
       if (!list?.length) continue;
       ctx.fillStyle = palette[c] ?? "#fff";
-      // Two passes: far particles faint, near ones bright (cheap depth fog).
+      // Far particles faint; settled ones bright with a soft glow.
       for (const pass of [0, 1]) {
-        ctx.globalAlpha = (pass ? 1 : 0.45) * glow;
+        ctx.globalAlpha = pass ? 1 : 0.45;
+        ctx.shadowColor = pass ? glowColour[c] ?? "transparent" : "transparent";
+        ctx.shadowBlur = pass ? 7 : 0;
         ctx.beginPath();
         for (const i of list) {
           const k = xs[i * 3 + 2];
@@ -448,6 +446,7 @@ export function initHeroScene(): boolean {
       }
     }
     ctx.globalAlpha = 1;
+    ctx.shadowBlur = 0;
   };
 
   // ---- sizing and start ------------------------------------------------------------
@@ -472,15 +471,13 @@ export function initHeroScene(): boolean {
         const s = t[Math.floor((i * t.length) / parts.length)];
         p.ax = p.mx = p.bx = s.x; p.ay = p.my = p.by = s.y; p.az = p.mz = 0; p.c = p.nc = s.c; p.t0 = 0; p.dur = 1;
       });
-      showText(current);
     }
   };
 
   const begin = () => {
     if (started) return;
     started = true;
-    showText(current);
-    landAt = intro(clock + 100) + 150;
+    landAt = intro(clock + 100);
   };
 
   const run = () => { if (!raf) { last = performance.now(); raf = requestAnimationFrame(frame); } };
@@ -495,7 +492,7 @@ export function initHeroScene(): boolean {
   (document.fonts?.ready ?? Promise.resolve()).then(() => {
     resize();
     sync();
-    // Start when the intro loader has finished (or straight away without it).
+    // Start when the intro has finished (or straight away without it).
     const loader = document.querySelector("[data-intro]");
     if (!loader || document.documentElement.classList.contains("skip-intro")) begin();
     else {
