@@ -47,7 +47,7 @@ from the installed package and docs.astro.build.
   entries use `id` (no `slug`). Zod comes from `astro/zod`.
 
 ## SEO plumbing
-- `site: 'https://optifin.app'` in `astro.config.mjs` (required for sitemap
+- `site: 'https://www.optifin.app'` in `astro.config.mjs` (www is the main address) (required for sitemap
   and canonical URLs). Starlight adds `@astrojs/sitemap` automatically.
 - Every page sets a unique title and description through the shared
   `BaseLayout` props, plus JSON-LD where applicable.

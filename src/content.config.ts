@@ -11,6 +11,8 @@ export const collections = {
     loader: glob({ pattern: "**/*.{md,mdx}", base: "./src/content/guides" }),
     schema: z.object({
       title: z.string(),
+      /** Shorter title for search results (60 characters with " | Optifin"). */
+      seoTitle: z.string().max(50).optional(),
       description: z.string().max(170),
       published: z.coerce.date(),
       updated: z.coerce.date().optional(),

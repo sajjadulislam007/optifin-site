@@ -1,5 +1,6 @@
 ---
 title: "How to track COGS in Shopify (and keep it accurate)"
+seoTitle: "How to Track COGS in Shopify Accurately"
 description: "Cost of goods sold is the biggest input to Shopify profit. How to record COGS, handle price changes and find products with missing costs."
 published: 2026-11-12
 readingMinutes: 6

@@ -23,7 +23,7 @@ const schema = [{
 }];
 ---
 <BaseLayout
-  title={`${guide.data.title} | Optifin`}
+  title={`${guide.data.seoTitle ?? guide.data.title} | Optifin`}
   description={guide.data.description}
   breadcrumbs={[{ name: "Guides", href: "/guides/" }, { name: guide.data.title, href: `/guides/${guide.id}/` }]}
   schema={schema}

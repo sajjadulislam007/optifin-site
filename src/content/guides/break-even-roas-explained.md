@@ -1,5 +1,6 @@
 ---
 title: "Break-even ROAS explained (with formula and examples)"
+seoTitle: "Break-even ROAS: Formula and Examples"
 description: "Break-even ROAS is the return on ad spend at which ads stop losing money. Learn the formula, see examples and find your own number."
 published: 2026-11-13
 readingMinutes: 5
