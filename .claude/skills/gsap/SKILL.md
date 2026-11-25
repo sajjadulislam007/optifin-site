@@ -75,9 +75,12 @@ mm.add(
 - Home hero (`scripts/motion/heroScene.ts`): a deep, slow analytics scene in the
   background: two growth charts at different distances (bars, trend line with a
   soft area, gridlines, counting labels, a quiet arrowhead, slow lights on the
-  line) seen through dark water (light rays, drifting specks, haze), rendered at
+  line) seen through dark water (light rays, a soft surface glow, drifting specks,
+  a few bubbles, haze; no caustic pattern or refraction wobble: too noisy), rendered at
   low resolution so it reads soft and far away, dimmer behind the headline.
-  Keep it dark and slow: new bars every 8-11 s. Labels are abstract numbers, never
+  Keep it dark and slow: new bars every 8-11 s. Bars have permanent ids so their
+  look never flips when a new bar arrives. Clicking the headline sends a soft
+  band of light through the particles (no rings, no displacement). Labels are abstract numbers, never
   currency. The headline is built only from particles that fly in from depth;
   the settled particles are the finished text (no second, crisp-text step).
   Changes sweep particles back into depth left to right and re-form the next

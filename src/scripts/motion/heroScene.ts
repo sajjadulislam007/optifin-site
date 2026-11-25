@@ -3,8 +3,8 @@
 //
 // Background: two growth charts at different distances (bars, trend line with
 // a soft area, gridlines, counting labels, a quiet arrowhead, slow lights on
-// the line), seen through dark water: faint light rays from above, drifting
-// specks and a haze. It moves very slowly, is dimmer behind the headline, and
+// the line), seen through dark water: faint light rays and a soft glow from above,
+// drifting specks, a few bubbles and a haze. It moves very slowly, is dimmer behind the headline, and
 // is rendered at low resolution so it looks soft and far away. The figures
 // are abstract (no currency, no axis), so they are not claims.
 //
@@ -219,11 +219,14 @@ export function initHeroScene(): boolean {
     series: number[]; level: number; scroll: number; scaleMax: number;
     every: number; scale: number; alpha: number; lift: number; bars: number;
     sparks: { u: number; sp: number }[]; sparkClock: number;
+    head: number; // values ever added; gives each bar a permanent number
+    ref: number;  // what the labels count from; drifts smoothly, never jumps
   };
   const makeLayer = (every: number, scale: number, alpha: number, lift: number, bars: number): Layer => {
-    const l: Layer = { series: [], level: 20, scroll: Math.random(), scaleMax: 1, every, scale, alpha, lift, bars, sparks: [], sparkClock: 0 };
-    for (let i = 0; i < 40; i++) l.series.push(grow(l));
+    const l: Layer = { series: [], level: 20, scroll: Math.random(), scaleMax: 1, every, scale, alpha, lift, bars, sparks: [], sparkClock: 0, head: 0, ref: 1 };
+    for (let i = 0; i < 40; i++) { l.series.push(grow(l)); l.head++; }
     l.scaleMax = Math.max(...l.series.slice(-bars - 2));
+    l.ref = l.series[l.series.length - bars - 2];
     return l;
   };
   // Steady climb with noise. Values are rebased now and then so they never grow
@@ -238,6 +241,14 @@ export function initHeroScene(): boolean {
   }));
   const rays = Array.from({ length: 5 }, (_, i) => ({ x: 0.12 + i * 0.19 + (Math.random() - 0.5) * 0.06, wid: 0.06 + Math.random() * 0.06, ph: Math.random() * TAU }));
   const fmtNum = (n: number) => Math.round(n * 1000).toLocaleString("en-US");
+  // Light from the surface far above: two large, dim pools that drift very slowly.
+  const pools = [
+    { x: 0.3, y: -0.05, r: 0.55, ph: Math.random() * TAU },
+    { x: 0.72, y: -0.1, r: 0.5, ph: Math.random() * TAU },
+  ];
+  const bubbles = Array.from({ length: small ? 5 : 11 }, () => ({
+    x: Math.random(), y: 1 + Math.random() * 0.8, r: 1.5 + Math.random() * 3, sp: 0.00002 + Math.random() * 0.00003, ph: Math.random() * TAU,
+  }));
   const bg = document.createElement("canvas");
   const bgx = bg.getContext("2d")!;
   const BG_SCALE = 0.6;
@@ -246,11 +257,13 @@ export function initHeroScene(): boolean {
   const drawLayer = (l: Layer, ms: number, base: number, fullH: number, fade: (x: number) => number) => {
     l.scroll += ms / l.every;
     if (l.scroll >= 1) {
-      l.scroll -= 1; l.series.push(grow(l)); if (l.series.length > 80) l.series.shift();
-      if (l.level > 1e6) { const k = 1e-3; l.series.forEach((_, i) => (l.series[i] *= k)); l.level *= k; l.scaleMax *= k; }
+      l.scroll -= 1; l.series.push(grow(l)); l.head++; if (l.series.length > 80) l.series.shift();
+      if (l.level > 1e6) { const k = 1e-3; l.series.forEach((_, i) => (l.series[i] *= k)); l.level *= k; l.scaleMax *= k; l.ref *= k; }
     }
     const view = l.series.slice(-(l.bars + 2));
     l.scaleMax += (Math.max(...view) * 1.1 - l.scaleMax) * 0.004;
+    l.ref += (view[0] - l.ref) * Math.min(1, ms / 12000);
+    const id = (i: number) => l.head - view.length + i; // permanent bar number
 
     const width = w * 0.9 * l.scale;
     const left = (w - width) / 2;
@@ -261,6 +274,8 @@ export function initHeroScene(): boolean {
     const yOf = (v: number) => b - (v / l.scaleMax) * chartH;
     const growIn = Math.min(1, l.scroll * 2.5);
     const A = l.alpha;
+    // Bars fade in over the first gap at the left edge instead of popping.
+    const edge = (x: number) => Math.max(0, Math.min(1, (x - left) / gap));
 
     // Gridlines, like an analytics panel.
     bgx.setLineDash([3, 6]);
@@ -281,8 +296,8 @@ export function initHeroScene(): boolean {
       if (x < left - gap || x > left + width + gap) return;
       const isNew = i === view.length - 1;
       const y = yOf(isNew ? v * growIn : v);
-      const a = A * fade(x) * (isNew ? growIn : 1);
-      const bwi = bw * (i % 3 === 1 ? 0.62 : 1);
+      const a = A * fade(x) * edge(x) * (isNew ? growIn : 1);
+      const bwi = bw * (id(i) % 3 === 1 ? 0.62 : 1);
       const col = bgx.createLinearGradient(0, b - chartH * 1.1, 0, y);
       col.addColorStop(0, "rgba(56,189,248,0)"); col.addColorStop(1, `rgba(56,189,248,${(0.05 * a).toFixed(3)})`);
       bgx.fillStyle = col; bgx.fillRect(x - bwi * 0.8, b - chartH * 1.1, bwi * 1.6, y - (b - chartH * 1.1));
@@ -304,6 +319,8 @@ export function initHeroScene(): boolean {
       const val = i === view.length - 1 ? prev + (v - prev) * growIn : v;
       return { x: xOf(i), y: yOf(val) - 14 * l.scale, v: val };
     });
+    bgx.save();
+    bgx.beginPath(); bgx.rect(left, 0, width + gap * 2, h); bgx.clip();
     const area = bgx.createLinearGradient(0, b - chartH, 0, b);
     area.addColorStop(0, `rgba(56,189,248,${(0.10 * A).toFixed(3)})`); area.addColorStop(1, "rgba(56,189,248,0)");
     bgx.fillStyle = area;
@@ -311,17 +328,20 @@ export function initHeroScene(): boolean {
     pts.forEach((p, i) => (i ? bgx.lineTo(p.x, p.y) : bgx.moveTo(p.x, p.y)));
     bgx.lineTo(pts[pts.length - 1].x, b); bgx.lineTo(pts[0].x, b); bgx.closePath(); bgx.fill();
     const lg = bgx.createLinearGradient(left, 0, left + width, 0);
-    lg.addColorStop(0, `rgba(147,197,253,${(0.12 * A).toFixed(3)})`); lg.addColorStop(1, `rgba(224,242,254,${(0.75 * A).toFixed(3)})`);
+    lg.addColorStop(0, "rgba(147,197,253,0)");
+    lg.addColorStop(Math.min(0.25, gap / width), `rgba(147,197,253,${(0.12 * A).toFixed(3)})`);
+    lg.addColorStop(1, `rgba(224,242,254,${(0.75 * A).toFixed(3)})`);
     bgx.strokeStyle = lg; bgx.lineWidth = 1.6; bgx.lineJoin = "round";
     bgx.beginPath();
     pts.forEach((p, i) => (i ? bgx.lineTo(p.x, p.y) : bgx.moveTo(p.x, p.y)));
     bgx.stroke();
+    bgx.restore();
     bgx.font = `500 ${Math.round((small ? 9 : 11) * Math.max(0.8, l.scale))}px ${bodyFont}`;
     bgx.textAlign = "center";
     pts.forEach((p, i) => {
-      const a = A * fade(p.x);
-      if (i % 2 === 0) { bgx.fillStyle = `rgba(224,242,254,${(0.7 * a).toFixed(3)})`; bgx.beginPath(); bgx.arc(p.x, p.y, 2.2 * l.scale + 0.6, 0, TAU); bgx.fill(); }
-      if (i % 6 === 4) { bgx.fillStyle = `rgba(191,219,254,${(0.5 * a).toFixed(3)})`; bgx.fillText(fmtNum((p.v / view[0]) * 12.4), p.x, p.y - 11); }
+      const a = A * fade(p.x) * edge(p.x);
+      if (id(i) % 2 === 0) { bgx.fillStyle = `rgba(224,242,254,${(0.7 * a).toFixed(3)})`; bgx.beginPath(); bgx.arc(p.x, p.y, 2.2 * l.scale + 0.6, 0, TAU); bgx.fill(); }
+      if (id(i) % 6 === 4) { bgx.fillStyle = `rgba(191,219,254,${(0.5 * a).toFixed(3)})`; bgx.fillText(fmtNum((p.v / l.ref) * 12.4), p.x, p.y - 11); }
     });
     // A quiet arrowhead on the newest point.
     const e = pts[pts.length - 1], d = pts[pts.length - 2];
@@ -345,7 +365,7 @@ export function initHeroScene(): boolean {
       const p0 = pts[k], p1 = pts[Math.min(pts.length - 1, k + 1)];
       const x = p0.x + (p1.x - p0.x) * t, y = p0.y + (p1.y - p0.y) * t;
       const g = bgx.createRadialGradient(x, y, 0, x, y, 9);
-      g.addColorStop(0, `rgba(224,242,254,${(0.6 * A * fade(x)).toFixed(3)})`); g.addColorStop(1, "rgba(96,165,250,0)");
+      g.addColorStop(0, `rgba(224,242,254,${(0.6 * A * fade(x) * edge(x)).toFixed(3)})`); g.addColorStop(1, "rgba(96,165,250,0)");
       bgx.fillStyle = g; bgx.fillRect(x - 9, y - 9, 18, 18);
     }
   };
@@ -375,7 +395,35 @@ export function initHeroScene(): boolean {
       bgx.closePath(); bgx.fill();
     }
 
+    // Surface glow: a soft band of light at the top and two slow-drifting pools.
+    const top = bgx.createLinearGradient(0, 0, 0, h * 0.45);
+    top.addColorStop(0, `rgba(56,189,248,${(0.07 + 0.015 * Math.sin(clock * 0.00015)).toFixed(3)})`);
+    top.addColorStop(1, "rgba(56,189,248,0)");
+    bgx.fillStyle = top; bgx.fillRect(0, 0, w, h * 0.45);
+    for (const p of pools) {
+      const px = (p.x + Math.sin(clock * 0.00004 + p.ph) * 0.06) * w;
+      const py = (p.y + Math.cos(clock * 0.00003 + p.ph) * 0.03) * h;
+      const pr = p.r * w;
+      const g = bgx.createRadialGradient(px, py, 0, px, py, pr);
+      g.addColorStop(0, "rgba(96,165,250,0.08)"); g.addColorStop(1, "rgba(96,165,250,0)");
+      bgx.fillStyle = g; bgx.fillRect(px - pr, py - pr, pr * 2, pr * 2);
+    }
+
     for (const l of layers) drawLayer(l, ms, base, fullH, fade);
+
+    // A few bubbles rising slowly and wobbling.
+    for (const b of bubbles) {
+      b.y -= b.sp * ms;
+      if (b.y < -0.05) { b.y = 1.05 + Math.random() * 0.5; b.x = Math.random(); }
+      if (b.y > 1.02) continue;
+      const x = b.x * w + Math.sin(clock * 0.0011 + b.ph) * 6, y = b.y * h;
+      const a = 0.22 * fade(x);
+      bgx.strokeStyle = `rgba(186,230,253,${a.toFixed(3)})`;
+      bgx.lineWidth = 1;
+      bgx.beginPath(); bgx.arc(x, y, b.r, 0, TAU); bgx.stroke();
+      bgx.fillStyle = `rgba(224,242,254,${(a * 1.4).toFixed(3)})`;
+      bgx.beginPath(); bgx.arc(x - b.r * 0.35, y - b.r * 0.35, b.r * 0.25, 0, TAU); bgx.fill();
+    }
 
     // Drifting specks, very slow, rising with a gentle sway.
     for (const s of snow) {
@@ -394,6 +442,20 @@ export function initHeroScene(): boolean {
 
     ctx.drawImage(bg, 0, 0, w, h);
   };
+
+  // ---- click: a soft band of light travels through the headline -----------
+  const ripples: { x: number; y: number; t: number }[] = [];
+  const RIPPLE_LIFE = 1600; // ms
+  const lit: number[] = [];
+  hero.addEventListener("pointerdown", (e) => {
+    if ((e.target as HTMLElement).closest("a, button, input, label")) return;
+    const r = hero.getBoundingClientRect();
+    const x = e.clientX - r.left, y = e.clientY - r.top;
+    const pad = 50;
+    if (x < box.left - pad || x > box.left + box.width + pad || y < box.top - pad || y > box.top + box.height + pad) return;
+    ripples.push({ x, y, t: clock });
+    if (ripples.length > 4) ripples.shift();
+  });
 
   // ---- loop -------------------------------------------------------------------------
   const buckets: number[][] = [];
@@ -432,6 +494,7 @@ export function initHeroScene(): boolean {
     const v = vp();
     const f = h * 1.15;
     for (const b of buckets) b.length = 0;
+    lit.length = 0;
     if (xs.length < parts.length * 3) xs = new Float32Array(parts.length * 3);
     for (let i = 0; i < parts.length; i++) {
       const p = parts[i];
@@ -446,6 +509,12 @@ export function initHeroScene(): boolean {
         x += Math.sin(clock * 0.0014 + p.ph) * 0.3;
         y += Math.cos(clock * 0.0019 + p.ph) * 0.3;
       } else if (u > 0.5) p.c = p.nc;
+      for (const rp of ripples) {
+        const age = clock - rp.t;
+        if (age > RIPPLE_LIFE) continue;
+        const d = Math.hypot(x - rp.x, y - rp.y);
+        if (Math.abs(d - age * 0.5) < 22) { lit.push(i); break; }
+      }
       const k = f / (f + z);
       xs[i * 3] = v.x + (x - v.x) * k;
       xs[i * 3 + 1] = v.y + (y - v.y) * k;
@@ -474,6 +543,26 @@ export function initHeroScene(): boolean {
     }
     ctx.globalAlpha = 1;
     ctx.shadowBlur = 0;
+    // Light band: particles it is passing glow briefly.
+    let strength = 0;
+    for (let i = ripples.length - 1; i >= 0; i--) {
+      const age = clock - ripples[i].t;
+      if (age > RIPPLE_LIFE) { ripples.splice(i, 1); continue; }
+      strength = Math.max(strength, 1 - age / RIPPLE_LIFE);
+    }
+    if (lit.length && strength > 0) {
+      ctx.fillStyle = `rgba(224,242,254,${(0.75 * strength).toFixed(3)})`;
+      ctx.shadowColor = "rgba(125,211,252,0.9)";
+      ctx.shadowBlur = 10;
+      ctx.beginPath();
+      for (const i of lit) {
+        const r = Math.max(0.6, dot * xs[i * 3 + 2] * 1.15);
+        const x = xs[i * 3], y = xs[i * 3 + 1];
+        ctx.moveTo(x + r, y); ctx.arc(x, y, r, 0, TAU);
+      }
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    }
   };
 
   // ---- sizing and start ------------------------------------------------------------
