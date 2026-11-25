@@ -13,6 +13,10 @@ In **Costs → Shipping**, add rules for what you pay to ship, for example a fla
 
 In **Costs → Payment fees**, set the fee for each payment gateway (a percentage plus a fixed amount). Optifin applies it to every order paid through that gateway.
 
+## From card sales to payout
+
+On the payment fees reconciliation view, Optifin walks from card sales through refunds, disputes, adjustments and fees to the amount paid to your bank, using settled Shopify Payments transactions. Anything it cannot explain is shown as "Other differences reported by Shopify", and pending payouts are disclosed.
+
 ## Check the results
 
 Each order's profit breakdown shows the shipping cost and fee that were applied, so you can confirm the rules work as expected.

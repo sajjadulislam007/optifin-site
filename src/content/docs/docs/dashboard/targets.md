@@ -8,6 +8,7 @@ sidebar:
 Targets show whether you are on track for a goal.
 
 - Open the dashboard menu and choose **Targets** to set a weekly or monthly target for a metric in the current view.
+- You can also set a goal from any KPI card. Progress shows on the card when the selected range matches the goal's week or month.
 - Cards with a target show a pacing bar and the share of the target reached.
 - Targets can also come from a locked profit plan (see [Profit planning](/docs/planning/profit-planning/)).
 
