@@ -92,3 +92,9 @@ mm.add(
   Audiowide wordmark as paths), once per session, then fires
   `optifin:intro-done`; the hero starts on that event. Skipped under reduced
   motion; a CSS timeout removes it if the script never runs.
+- Banner scenes (`scripts/motion/heroScenes.ts`): every PageHero runs the same
+  engine (`initHeroScene({ root, scene })`) with a topic scene picked from its URL
+  by `sceneForPath` (dashboard, costs, orders, customers, alerts, reports,
+  actions, simulator, integrations, pricing, growth, ambient). Banner titles are
+  left-aligned, so scenes draw in `env.region` on the right and pass alphas
+  through `env.fade(x)`. Title only (no slogans) on banners.

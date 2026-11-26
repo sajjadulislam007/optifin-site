@@ -1,17 +1,27 @@
 ---
-// Inner-page hero: dark band with glow, eyebrow, title and lead.
-interface Props { eyebrow?: string; title: string; lead?: string; center?: boolean }
-const { eyebrow, title, lead, center = false } = Astro.props;
+// Inner-page hero: dark band with glow, eyebrow, title and lead, plus a live
+// background scene and a particle title (heroScene.ts).
+import { sceneForPath } from "../scripts/motion/heroScenes";
+// scene: background scene name (heroScenes.ts); by default chosen from the URL.
+interface Props { eyebrow?: string; title: string; lead?: string; center?: boolean; scene?: string }
+const { eyebrow, title, lead, center = false, scene = sceneForPath(Astro.url.pathname) } = Astro.props;
 ---
-<section class:list={["page-hero", { center }]}>
+<section class:list={["page-hero", { center }]} data-scene={scene}>
   <div class="glow" aria-hidden="true"></div>
   <div class="container inner">
     {eyebrow && <p class="eyebrow">{eyebrow}</p>}
-    <h1 class="display page-title" data-reveal>{title}</h1>
+    <h1 class="display page-title" data-particle-title>{title}</h1>
     {lead && <p class="lead" data-reveal>{lead}</p>}
     <slot />
   </div>
 </section>
+
+<script>
+  import { initHeroScene } from "../scripts/motion/heroScene";
+  document.querySelectorAll<HTMLElement>(".page-hero[data-scene]").forEach((root) => {
+    initHeroScene({ root, scene: root.dataset.scene });
+  });
+</script>
 
 <style>
   .page-hero { position: relative; overflow: hidden; background: var(--navy-900); color: #fff; padding: 150px 0 clamp(64px, 9vw, 110px); margin-top: -76px; }

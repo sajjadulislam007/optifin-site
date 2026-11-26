@@ -1,5 +1,7 @@
-// Home hero scene: a deep, slow analytics scene in the background and a
-// headline built from particles that fly in from deep behind it.
+// Hero scene engine: a deep, slow analytics scene in the background and a
+// headline built from particles that fly in from deep behind it. Used by the
+// home hero (growth chart, rotating slogans) and by every PageHero banner
+// (a topic scene from heroScenes.ts, title only).
 //
 // Background: two growth charts at different distances (bars, trend line with
 // a soft area, gridlines, counting labels, a quiet arrowhead, slow lights on
@@ -19,7 +21,15 @@
 // the <h1> ([{ "t": "plain", "a": "accent" }]) and must be claims the released
 // app supports.
 
+import { createScene } from "./heroScenes";
+
 interface Phrase { t: string; a: string }
+export interface HeroSceneOptions {
+  /** The banner section; defaults to the home hero (.hero). */
+  root?: HTMLElement;
+  /** Background scene name (heroScenes.ts); "growth" is the home chart. */
+  scene?: string;
+}
 interface Target { x: number; y: number; c: number }
 interface Line { words: { text: string; accent: boolean }[]; y: number }
 interface P {
@@ -38,12 +48,15 @@ const TAU = Math.PI * 2;
 const easeInOut = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 const easeOut = (t: number) => 1 - Math.pow(1 - t, 4);
 
-export function initHeroScene(): boolean {
+export function initHeroScene(opts: HeroSceneOptions = {}): boolean {
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return false;
-  const hero = document.querySelector<HTMLElement>(".hero");
+  const hero = opts.root ?? document.querySelector<HTMLElement>(".hero");
   const title = hero?.querySelector<HTMLElement>("[data-particle-title]");
-  const copy = hero?.querySelector<HTMLElement>(".hero-copy");
+  const copy = hero?.querySelector<HTMLElement>(".hero-copy, .inner");
   if (!hero || !title || !copy) return false;
+  const sceneDraw = createScene(opts.scene ?? "growth");
+  // Banner titles are left-aligned; the home headline is centred.
+  const alignLeft = () => /left|start/.test(getComputedStyle(title).textAlign);
 
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
@@ -133,7 +146,7 @@ export function initHeroScene(): boolean {
       probe.clearRect(0, 0, w, h);
       for (const row of rows) {
         const lineW = row.words.reduce((sum, wd, j) => sum + measure(wd.text) + (j ? space : 0), 0);
-        let x = cx - lineW / 2;
+        let x = alignLeft() ? box.left : cx - lineW / 2;
         for (const wd of row.words) {
           probe.fillStyle = wd.accent ? grad : "#ffffff";
           probe.fillText(wd.text, x, row.y - font.lh / 2 + baseline);
@@ -378,8 +391,18 @@ export function initHeroScene(): boolean {
 
     const base = Math.min(h - 12, copy.offsetTop + copy.offsetHeight + 40);
     const fullH = Math.max(60, base - (box.top + box.height * 0.72));
-    // Dimmer in the middle, behind the headline.
-    const fade = (x: number) => { const d = Math.abs(x / w - 0.5) * 2; return 0.14 + 0.86 * Math.min(1, d * d * 1.8); };
+    // Dimmer behind the title: the middle for a centred headline, the left for a banner.
+    const left = alignLeft();
+    const fade = small
+      ? () => 0.4
+      : left
+        ? (x: number) => { const t = Math.max(0, Math.min(1, (x / w - 0.34) / 0.4)); return 0.12 + 0.88 * t * t * (3 - 2 * t); }
+        : (x: number) => { const d = Math.abs(x / w - 0.5) * 2; return 0.14 + 0.86 * Math.min(1, d * d * 1.8); };
+    const region = small
+      ? { x0: w * 0.04, x1: w * 0.96, y0: h * 0.12, y1: h * 0.9 }
+      : left
+        ? { x0: w * 0.52, x1: w * 0.95, y0: h * 0.16, y1: h * 0.86 }
+        : { x0: w * 0.04, x1: w * 0.96, y0: box.top, y1: base };
 
     // Light from the surface: wide, faint beams that sway very slowly.
     for (const r of rays) {
@@ -409,7 +432,8 @@ export function initHeroScene(): boolean {
       bgx.fillStyle = g; bgx.fillRect(px - pr, py - pr, pr * 2, pr * 2);
     }
 
-    for (const l of layers) drawLayer(l, ms, base, fullH, fade);
+    if (sceneDraw) sceneDraw({ g: bgx, w, h, clock, ms, small, font: bodyFont, fade, region });
+    else for (const l of layers) drawLayer(l, ms, base, fullH, fade);
 
     // A few bubbles rising slowly and wobbling.
     for (const b of bubbles) {
@@ -530,7 +554,7 @@ export function initHeroScene(): boolean {
     const hr = hero.getBoundingClientRect();
     const stage = hero.querySelector<HTMLElement>(".hero-stage");
     w = Math.max(1, Math.round(hr.width));
-    h = Math.max(1, Math.round((stage ? stage.offsetTop : hr.height) + 160));
+    h = Math.max(1, Math.round(stage ? stage.offsetTop + 160 : hr.height));
     dpr = Math.min(window.devicePixelRatio || 1, 2);
     canvas.style.height = `${h}px`;
     canvas.width = Math.round(w * dpr);
